@@ -1,21 +1,38 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dashi/models/dashi_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class APIService {
   APIService._instantiate();
   static final APIService instance = APIService._instantiate();
 
-  // final String _baseUrl = '192.168.68.91:8443';
   String _baseUrl = '';
+  String get baseUrl => _baseUrl;
+
+  setBaseUrl([url]) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String savedBaseUrl = prefs.getString('baseUrl');
+    if (url == null) {
+      if (savedBaseUrl == null) {
+        if (kIsWeb) {
+          const dashiBaseUrl = String.fromEnvironment('DASHI_API_BASE_URL');
+          _baseUrl = dashiBaseUrl;
+        }
+      } else {
+        _baseUrl = savedBaseUrl;
+      }
+    } else {
+      _baseUrl = url;
+      await prefs.setString('baseUrl', _baseUrl);
+    }
+    print("Dashi API Base URL being set to: ");
+    print(_baseUrl);
+  }
 
   Future<List<Apps>> fetchApps() async {
-    const dashiBaseUrl = String.fromEnvironment('DASHI_API_BASE_URL');
-    print("Dashi API Base URL being set to: ");
-    print(dashiBaseUrl);
-    _baseUrl = dashiBaseUrl;
-
     Uri uri = Uri.http(_baseUrl, '/api/apps');
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',

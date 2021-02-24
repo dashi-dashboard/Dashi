@@ -26,6 +26,8 @@ dependencies:
   cupertino_icons: ^1.0.1
   http: ^0.12.2
   responsive_grid: ^1.2.1+1
+  shared_preferences: ^0.5.4+8
+  shared_preferences_web: ^0.1.0
   stacked: ^1.9.1+2
   url_launcher: ^5.7.10
 

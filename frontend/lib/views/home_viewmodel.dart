@@ -22,6 +22,7 @@ class HomeViewModel extends BaseViewModel {
 
   getInfo() async {
     _ready = false;
+    await APIService.instance.setBaseUrl();
     await fetchApps();
     _ready = true;
     notifyListeners();
