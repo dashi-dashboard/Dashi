@@ -16,7 +16,7 @@ RUN flutter config --enable-web
 RUN mkdir /app
 COPY frontend /app
 WORKDIR /app
-RUN flutter build web
+RUN flutter build web --dart-define=DASHI_API_BASE_URL=localhost:8443
 
 FROM golang:1.13.1-alpine AS GO_BUILD
 RUN apk add build-base

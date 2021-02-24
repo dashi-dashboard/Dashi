@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Go Backend",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/backend/server.go"
+        },
+        {
+            "name": "Launch Flutter Frontend",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "program": "${workspaceFolder}/frontend/lib/main.dart",
+            "flutterDisableVmServiceExperimental": true,
+			"args": [
+				"--web-hostname",
+				"any",
+                "--dart-define=DASHI_API_BASE_URL=localhost:8443"
+			],
+            "env": {
+                "DASHI_API_BASE_URL": "localhost:8443"
+            }
+        }
+    ]
+}
