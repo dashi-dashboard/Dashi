@@ -8,9 +8,14 @@ class APIService {
   static final APIService instance = APIService._instantiate();
 
   // final String _baseUrl = '192.168.68.91:8443';
-  final String _baseUrl = '';
+  String _baseUrl = '';
 
   Future<List<Apps>> fetchApps() async {
+    const dashiBaseUrl = String.fromEnvironment('DASHI_API_BASE_URL');
+    print("Dashi API Base URL being set to: ");
+    print(dashiBaseUrl);
+    _baseUrl = dashiBaseUrl;
+
     Uri uri = Uri.http(_baseUrl, '/api/apps');
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
