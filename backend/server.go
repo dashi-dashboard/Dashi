@@ -13,13 +13,13 @@ import (
 
 var config *Config
 
-func GetFullConfig(w http.ResponseWriter, r *http.Request) {
+func getFullConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(config)
 }
 
-func GetApps(w http.ResponseWriter, r *http.Request) {
+func getApps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	json.NewEncoder(w).Encode(config.Apps)
@@ -37,11 +37,6 @@ func GetApps(w http.ResponseWriter, r *http.Request) {
 //     json.NewEncoder(w).Encode(data)
 // }
 
-func PreFlight(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "DELETE, GET, OPTIONS, POST, PUT")
-}
-
 func main() {
 	var err error
 
@@ -57,8 +52,8 @@ func main() {
 	})
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/", GetFullConfig).Methods("GET")
-	router.HandleFunc("/api/apps", GetApps).Methods("GET")
+	router.HandleFunc("/api/", getFullConfig).Methods("GET")
+	router.HandleFunc("/api/apps", getApps).Methods("GET")
 	// router.HandleFunc("/api/apps/{id}", GetSingleApp).Methods("GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend")))
 
