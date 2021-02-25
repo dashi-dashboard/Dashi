@@ -9,8 +9,8 @@ import (
 
 // Config stores the global user-defined configuration and content to be served throuth the API.
 type Config struct {
-	Apps  map[string]App `toml:"Apps"`
-	Users []User         `toml:"Users"`
+	Apps  map[string]App  `toml:"Apps"`
+	Users map[string]User `toml:"Users"`
 }
 
 // App represents a single clickable app on the dashboard.
@@ -23,7 +23,6 @@ type App struct {
 
 // User represents a single dashboard user who can view restricted items.
 type User struct {
-	Name string `toml:"name"`
 	Role string `toml:"role"`
 }
 
