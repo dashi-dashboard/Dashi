@@ -20,9 +20,13 @@ class HomeViewModel extends BaseViewModel {
   List<Apps> _apps = [];
   List<Apps> get apps => _apps;
 
+  Dashboard _background;
+  Dashboard get background => _background;
+
   getInfo() async {
     _ready = false;
     await APIService.instance.setBaseUrl();
+    await fetchDashboardConfig();
     await fetchApps();
     _ready = true;
     notifyListeners();
@@ -30,6 +34,11 @@ class HomeViewModel extends BaseViewModel {
 
   fetchApps() async {
     _apps = await APIService.instance.fetchApps();
+    notifyListeners();
+  }
+
+  fetchDashboardConfig() async {
+    _background = await APIService.instance.fetchDashboardConfig();
     notifyListeners();
   }
 }

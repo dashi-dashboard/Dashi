@@ -9,8 +9,9 @@ import (
 
 // Config stores the global user-defined configuration and content to be served throuth the API.
 type Config struct {
-	Apps  map[string]App  `toml:"Apps"`
-	Users map[string]User `toml:"Users"`
+	Apps      map[string]App  `toml:"Apps"`
+	Users     map[string]User `toml:"Users"`
+	Dashboard Dashboard       `toml:"Dashboard"`
 }
 
 // App represents a single clickable app on the dashboard.
@@ -19,11 +20,17 @@ type App struct {
 	Tag       string `toml:"tag"`
 	EnableAPI bool   `toml:"enable_api"`
 	Icon      string `toml:"icon"`
+	Color     string `toml:"color"`
 }
 
 // User represents a single dashboard user who can view restricted items.
 type User struct {
 	Role string `toml:"role"`
+}
+
+type Dashboard struct {
+	Background      string `toml:"background"`
+	BackgroundImage string `toml:"background_image"`
 }
 
 func readConfig(filename string) (*Config, error) {
