@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rsa"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -13,12 +12,11 @@ import (
 
 // Config stores the global user-defined configuration and content to be served throuth the API.
 type Config struct {
-	Apps           map[string]App `toml:"Apps"`
-	Users          []User         `toml:"Users"`
-	JWTKey         string         `toml:"jwt_key"`
-	JWTKeyPassword string         `toml:"jwt_key_password"`
-	LoginTimeout   int            `toml:"login_timeout"`
-	Dashboard      Dashboard      `toml:"Dashboard"`
+	Apps         map[string]App `toml:"Apps"`
+	Users        []User         `toml:"Users"`
+	JWTKey       string         `toml:"jwt_key"  json:"-"`
+	LoginTimeout int            `toml:"login_timeout"  json:"-"`
+	Dashboard    Dashboard      `toml:"Dashboard"`
 }
 
 // App represents a single clickable app on the dashboard.
@@ -36,6 +34,20 @@ type User struct {
 	Username string `toml:"name"`
 	Role     string `toml:"role"`
 	Password string `toml:"password" json:"-"`
+}
+
+func (a *App) RoleAuthorized(role string) bool {
+	if len(a.AccessRoles) == 0 {
+		return true
+	}
+
+	for _, authorizedRole := range a.AccessRoles {
+		if authorizedRole == role {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (c *Config) AuthenticateUser(username string, password string) (string, error) {
@@ -62,12 +74,7 @@ func (u *User) GenerateToken(config *Config) (string, error) {
 		"exp":      time.Now().Unix() + (int64(config.LoginTimeout) * 60),
 	})
 
-	key, err := config.parseJWTKey()
-	if err != nil {
-		return "", err
-	}
-
-	tokenString, err := token.SignedString(key)
+	tokenString, err := token.SignedString([]byte(config.JWTKey))
 
 	return tokenString, err
 }
@@ -80,7 +87,7 @@ func (c *Config) AuthenticateToken(tokenString string, config *Config) (*User, e
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return config.parseJWTKey()
+		return []byte(c.JWTKey), nil
 	})
 
 	if err != nil {
@@ -88,7 +95,7 @@ func (c *Config) AuthenticateToken(tokenString string, config *Config) (*User, e
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if claims["exp"].(int64) > time.Now().Unix() {
+		if int64(claims["exp"].(float64)) < time.Now().Unix() {
 			return nil, fmt.Errorf("Token has expired")
 		}
 
@@ -96,6 +103,30 @@ func (c *Config) AuthenticateToken(tokenString string, config *Config) (*User, e
 	} else {
 		return nil, err
 	}
+}
+
+func (c *Config) GetFilteredAppsList(user *User) map[string]App {
+	filteredList := make(map[string]App)
+
+	for name, app := range c.Apps {
+		if app.RoleAuthorized(user.Role) {
+			filteredList[name] = app
+		}
+	}
+
+	return filteredList
+}
+
+func (c *Config) GetPublicAppsList() map[string]App {
+	filteredList := make(map[string]App)
+
+	for name, app := range c.Apps {
+		if len(app.AccessRoles) == 0 {
+			filteredList[name] = app
+		}
+	}
+
+	return filteredList
 }
 
 func (c *Config) FindUserByUsername(username string) (*User, error) {
@@ -106,27 +137,6 @@ func (c *Config) FindUserByUsername(username string) (*User, error) {
 	}
 
 	return nil, fmt.Errorf("No user with username %s found", username)
-}
-
-func (c *Config) parseJWTKey() (*rsa.PrivateKey, error) {
-	if c.JWTKey == "" {
-		return nil, fmt.Errorf("jwt_key must be defined to enable authentication")
-	}
-
-	var key *rsa.PrivateKey
-	var err error
-
-	if c.JWTKeyPassword == "" {
-		key, err = jwt.ParseRSAPrivateKeyFromPEM([]byte(c.JWTKey))
-	} else {
-		key, err = jwt.ParseRSAPrivateKeyFromPEMWithPassword([]byte(c.JWTKey), c.JWTKeyPassword)
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("error parsing JWT key for authentication: %w", err)
-	}
-
-	return key, nil
 }
 
 type Dashboard struct {
@@ -141,6 +151,8 @@ func readConfig(filename string) (*Config, error) {
 	}
 
 	var config Config
+
+	config.LoginTimeout = 60
 
 	toml.Unmarshal(tomlFile, &config)
 	fmt.Println(config)
