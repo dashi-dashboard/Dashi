@@ -1,0 +1,20 @@
+[Apps]
+
+    [Apps."My App Name"]
+    url="http://127.0.0.1"
+    tag="mytag"
+    enable_api=false
+
+    [Apps."My Restricted App Name"]
+    url="http://127.0.0.1"
+    tag="mytag"
+    roles="myrole"
+    enable_api=false
+
+[[Users]]
+name = "myusername"
+role = "myrole"
+
+[[Users]]
+name = "mysecondusername"
+role = "differentrole"
