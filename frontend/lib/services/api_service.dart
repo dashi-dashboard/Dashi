@@ -60,4 +60,27 @@ class APIService {
       print('get apps failed');
     }
   }
+
+  Future<Dashboard> fetchDashboardConfig() async {
+    Uri uri = Uri.http(_baseUrl, '/api/dashboard');
+    Map<String, String> headers = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+    };
+
+    var response = await http.get(uri, headers: headers);
+    print(response.body);
+    if (response.statusCode == 200) {
+      try {
+        Dashboard dash;
+        final data = json.decode(response.body) as Map;
+        dash = Dashboard.fromMap(data);
+        return dash;
+      } catch (e) {
+        print(e);
+      }
+    } else {
+      print(response.statusCode);
+      print('get apps failed');
+    }
+  }
 }

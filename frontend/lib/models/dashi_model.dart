@@ -21,3 +21,17 @@ class Apps {
     );
   }
 }
+
+class Dashboard {
+  final Color color;
+  final String backgroundImage;
+
+  Dashboard({this.color, this.backgroundImage});
+
+  factory Dashboard.fromMap(Map<String, dynamic> map) {
+    return Dashboard(
+      color: Color(int.parse("0xFF" + map["Background"].replaceAll("#", ""))),
+      backgroundImage: map["BackgroundImage"],
+    );
+  }
+}
