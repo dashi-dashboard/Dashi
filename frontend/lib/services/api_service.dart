@@ -41,17 +41,20 @@ class APIService {
     var response = await http.get(uri, headers: headers);
     print(response.body);
     if (response.statusCode == 200) {
-      final data = json.decode(response.body) as Map;
-      print(data);
-      List<Apps> apps = [];
-      for (final appName in data.keys) {
-        print(data[appName]);
-        var newApp = Apps.fromMap(data[appName]);
-        newApp.name = appName;
-        apps.add(newApp);
+      try {
+        final data = json.decode(response.body) as Map;
+        print(data);
+        List<Apps> apps = [];
+        for (final appName in data.keys) {
+          var newApp = Apps.fromMap(data[appName]);
+          newApp.name = appName;
+          apps.add(newApp);
+          print(newApp.icon);
+        }
+        return apps;
+      } catch (e) {
+        print(e);
       }
-
-      return apps;
     } else {
       print(response.statusCode);
       print('get apps failed');

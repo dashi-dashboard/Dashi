@@ -1,11 +1,14 @@
+import 'dart:ui';
+
 class Apps {
   String name;
   final String url;
   final String tag;
   final bool enableAPI;
   final String icon;
+  final Color color;
 
-  Apps({this.url, this.tag, this.enableAPI, this.name, this.icon});
+  Apps({this.url, this.tag, this.enableAPI, this.name, this.icon, this.color});
 
   factory Apps.fromMap(Map<String, dynamic> map) {
     return Apps(
@@ -14,6 +17,7 @@ class Apps {
       tag: map["Tag"],
       url: map["URL"],
       icon: map["Icon"],
+      color: Color(int.parse("0xFF" + map["Color"].replaceAll("#", ""))),
     );
   }
 }

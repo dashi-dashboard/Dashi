@@ -52,7 +52,7 @@ func main() {
 	})
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/", getFullConfig).Methods("GET")
+	router.HandleFunc("/api", getFullConfig).Methods("GET")
 	router.HandleFunc("/api/apps", getApps).Methods("GET")
 	// router.HandleFunc("/api/apps/{id}", GetSingleApp).Methods("GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend")))

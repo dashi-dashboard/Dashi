@@ -23,22 +23,44 @@ _launchURL(url) async {
 
 _appCard(Apps app, double h) {
   return Card(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: InkWell(
-      onTap: () {
-        _launchURL(app.url);
-      },
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [Text(app.name)],
-        ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
       ),
-    ),
-  );
+      child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: app.color != Color(0x000000ff)
+                    ? [app.color, app.color.withAlpha(150)]
+                    : [Colors.black, Colors.grey.shade700]),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              hoverColor: Colors.grey.shade600,
+              splashColor: Colors.white,
+              onTap: () {
+                _launchURL(app.url);
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Text(
+                      app.name,
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          )));
 }
 
 class _HomeViewState extends State<HomeView> {

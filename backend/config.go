@@ -19,6 +19,7 @@ type App struct {
 	Tag       string `toml:"tag"`
 	EnableAPI bool   `toml:"enable_api"`
 	Icon      string `toml:"icon"`
+	Color     string `toml:"color"`
 }
 
 // User represents a single dashboard user who can view restricted items.
