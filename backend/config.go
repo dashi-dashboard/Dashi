@@ -9,9 +9,9 @@ import (
 
 // Config stores the global user-defined configuration and content to be served throuth the API.
 type Config struct {
-	Apps  map[string]App  `toml:"Apps"`
-	Users map[string]User `toml:"Users"`
-	Dashboard Dashboard `toml:"Dashboard"`
+	Apps      map[string]App  `toml:"Apps"`
+	Users     map[string]User `toml:"Users"`
+	Dashboard Dashboard       `toml:"Dashboard"`
 }
 
 // App represents a single clickable app on the dashboard.
@@ -29,7 +29,7 @@ type User struct {
 }
 
 type Dashboard struct {
-	Background 		string `toml:"background"`
+	Background      string `toml:"background"`
 	BackgroundImage string `toml:"background_image"`
 }
 
