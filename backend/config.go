@@ -18,6 +18,7 @@ type Config struct {
 	JWTKey         string         `toml:"jwt_key"`
 	JWTKeyPassword string         `toml:"jwt_key_password"`
 	LoginTimeout   int            `toml:"login_timeout"`
+	Dashboard      Dashboard      `toml:"Dashboard"`
 }
 
 // App represents a single clickable app on the dashboard.
@@ -26,6 +27,7 @@ type App struct {
 	Tag         string   `toml:"tag"`
 	EnableAPI   bool     `toml:"enable_api"`
 	Icon        string   `toml:"icon"`
+	Color       string   `toml:"color"`
 	AccessRoles []string `toml:"access_roles"`
 }
 
@@ -125,6 +127,11 @@ func (c *Config) parseJWTKey() (*rsa.PrivateKey, error) {
 	}
 
 	return key, nil
+}
+
+type Dashboard struct {
+	Background      string `toml:"background"`
+	BackgroundImage string `toml:"background_image"`
 }
 
 func readConfig(filename string) (*Config, error) {

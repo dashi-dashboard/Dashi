@@ -25,6 +25,12 @@ func getApps(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(config.Apps)
 }
 
+func getDashboardConfig(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	json.NewEncoder(w).Encode(config.Dashboard)
+}
+
 // func GetSingleApp(w http.ResponseWriter, r *http.Request) {
 //     w.Header().Set("Content-Type", "application/json")
 //     w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -52,8 +58,9 @@ func main() {
 	})
 
 	router := mux.NewRouter()
-	router.HandleFunc("/api/", getFullConfig).Methods("GET")
+	router.HandleFunc("/api", getFullConfig).Methods("GET")
 	router.HandleFunc("/api/apps", getApps).Methods("GET")
+	router.HandleFunc("/api/dashboard", getDashboardConfig).Methods("GET")
 	// router.HandleFunc("/api/apps/{id}", GetSingleApp).Methods("GET")
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend")))
 
