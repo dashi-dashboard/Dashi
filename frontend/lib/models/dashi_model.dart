@@ -22,6 +22,17 @@ class Apps {
   }
 }
 
+class Users {
+  String name;
+  final String role;
+
+  Users({this.role, this.name});
+
+  factory Users.fromMap(Map<String, dynamic> map) {
+    return Users(name: map['Name'], role: map['Role']);
+  }
+}
+
 class Dashboard {
   final Color color;
   final String backgroundImage;
