@@ -23,6 +23,12 @@
             "env": {
                 "DASHI_API_BASE_URL": "localhost:8443"
             }
+        },
+        {
+            "name": "Launch Flutter Frontend On Hardware",
+            "request": "launch",
+            "type": "dart",
+            "cwd": "frontend"
         }
     ]
 }
