@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var serverConfig *config.Config
@@ -79,11 +80,10 @@ type authenticateResponse struct {
 }
 
 func authenticate(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
 	var response authenticateResponse
 	response.Success = true
 
+	r.ParseForm()
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 
@@ -94,6 +94,33 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Token = token
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	json.NewEncoder(w).Encode(response)
+}
+
+type generatePasswordResponse struct {
+	Success bool
+	Message string
+	Hash    string
+}
+
+func generatePassword(w http.ResponseWriter, r *http.Request) {
+	var response generatePasswordResponse
+	response.Success = true
+
+	r.ParseForm()
+	password := r.Form.Get("password")
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), serverConfig.PasswordHashCost)
+	if err != nil {
+		response.Success = false
+		response.Message = err.Error()
+	}
+
+	response.Hash = string(hash)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -119,6 +146,7 @@ func main() {
 	router.Handle("/api/dashboard", authorizeMiddleware(http.HandlerFunc(getDashboardConfig))).Methods("GET")
 
 	router.HandleFunc("/api/authenticate", authenticate).Methods("POST")
+	router.HandleFunc("/api/generate-password", generatePassword).Methods("POST")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend")))
 

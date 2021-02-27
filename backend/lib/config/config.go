@@ -9,11 +9,12 @@ import (
 
 // Config stores the global user-defined configuration and content to be served throuth the API.
 type Config struct {
-	Apps         map[string]App `toml:"Apps"`
-	Users        []User         `toml:"Users"`
-	JWTKey       string         `toml:"jwt_key"  json:"-"`
-	LoginTimeout int            `toml:"login_timeout"  json:"-"`
-	Dashboard    Dashboard      `toml:"Dashboard"`
+	Apps             map[string]App `toml:"Apps"`
+	Users            []User         `toml:"Users"`
+	JWTKey           string         `toml:"jwt_key"  json:"-"`
+	PasswordHashCost int            `toml:"password_hash_cost"`
+	LoginTimeout     int            `toml:"login_timeout"  json:"-"`
+	Dashboard        Dashboard      `toml:"Dashboard"`
 }
 
 // AuthenticateUser will find and a user authenticte using provided username/password.

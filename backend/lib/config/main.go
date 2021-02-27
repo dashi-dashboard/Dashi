@@ -26,6 +26,8 @@ func Parse(bytes []byte) (*Config, error) {
 
 	// Default login timeout to 60 minutes.
 	config.LoginTimeout = 60
+	// Default bcrypt password hash cost.
+	config.PasswordHashCost = 10
 
 	err := toml.Unmarshal(bytes, &config)
 	log.Println(config)
