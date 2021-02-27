@@ -21,23 +21,6 @@ type contextKey int
 const authenticatedRequestKey contextKey = 0
 const authenticatedUserKey contextKey = 1
 
-func getFullConfig(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
-	filteredConfig := serverConfig
-
-	filteredConfig.Apps = serverConfig.GetPublicAppsList()
-
-	if r.Context().Value(authenticatedRequestKey).(bool) {
-		user := r.Context().Value(authenticatedUserKey).(*config.User)
-		log.Printf("Getting filtered apps list for user %s", user.Username)
-		filteredConfig.Apps = serverConfig.GetFilteredAppsList(user)
-	}
-
-	json.NewEncoder(w).Encode(filteredConfig)
-}
-
 func getApps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -132,7 +115,6 @@ func main() {
 	})
 
 	router := mux.NewRouter()
-	router.Handle("/api", authorizeMiddleware(http.HandlerFunc(getFullConfig))).Methods("GET")
 	router.Handle("/api/apps", authorizeMiddleware(http.HandlerFunc(getApps))).Methods("GET")
 	router.Handle("/api/dashboard", authorizeMiddleware(http.HandlerFunc(getDashboardConfig))).Methods("GET")
 
