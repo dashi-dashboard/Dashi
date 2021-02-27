@@ -126,7 +126,6 @@ func main() {
 		log.Printf("Error reading config file: %s", err)
 	}
 
-	// readConf("/config.toml")
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "HEAD", "POST", "DELETE", "PUT", "OPTIONS"},
