@@ -1,0 +1,23 @@
+jwt_key = "8uX3OrI8mQZd"
+
+[Apps]
+
+    [Apps."My App Name"]
+    url="http://127.0.0.1"
+    tag="mytag"
+    enable_api=false
+
+    [Apps."My Restricted App Name"]
+    url="http://127.0.0.1"
+    tag="mytag"
+    access_roles=["myrole"]
+    enable_api=false
+
+[[Users]]
+name = "myusername"
+password = "$2y$12$IeDH28Rgta36lZ.JEhI.qeqky3OTxMM806jhmm4rI91Peg91OLqhi" # mypassword bcrypt'ed
+role = "myrole"
+
+[[Users]]
+name = "mysecondusername"
+role = "differentrole"
