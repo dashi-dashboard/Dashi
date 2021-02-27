@@ -1,13 +1,10 @@
-package main
+package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/pelletier/go-toml"
-	"golang.org/x/crypto/bcrypt"
 )
 
 // Config stores the global user-defined configuration and content to be served throuth the API.
@@ -19,37 +16,8 @@ type Config struct {
 	Dashboard    Dashboard      `toml:"Dashboard"`
 }
 
-// App represents a single clickable app on the dashboard.
-type App struct {
-	URL         string   `toml:"url"`
-	Tag         string   `toml:"tag"`
-	EnableAPI   bool     `toml:"enable_api"`
-	Icon        string   `toml:"icon"`
-	Color       string   `toml:"color"`
-	AccessRoles []string `toml:"access_roles"`
-}
-
-// User represents a single dashboard user who can view restricted items.
-type User struct {
-	Username string `toml:"name"`
-	Role     string `toml:"role"`
-	Password string `toml:"password" json:"-"`
-}
-
-func (a *App) RoleAuthorized(role string) bool {
-	if len(a.AccessRoles) == 0 {
-		return true
-	}
-
-	for _, authorizedRole := range a.AccessRoles {
-		if authorizedRole == role {
-			return true
-		}
-	}
-
-	return false
-}
-
+// AuthenticateUser will find and a user authenticte using provided username/password.
+// Returns a jwt token which can be passed to AuthenticateToken to check validity and find the user.
 func (c *Config) AuthenticateUser(username string, password string) (string, error) {
 	user, err := c.FindUserByUsername(username)
 	if err != nil {
@@ -59,27 +27,9 @@ func (c *Config) AuthenticateUser(username string, password string) (string, err
 	return user.Authenticate(password, c)
 }
 
-func (u *User) Authenticate(password string, config *Config) (string, error) {
-	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
-	if err != nil {
-		return "", err
-	}
-
-	return u.GenerateToken(config)
-}
-
-func (u *User) GenerateToken(config *Config) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": u.Username,
-		"exp":      time.Now().Unix() + (int64(config.LoginTimeout) * 60),
-	})
-
-	tokenString, err := token.SignedString([]byte(config.JWTKey))
-
-	return tokenString, err
-}
-
-func (c *Config) AuthenticateToken(tokenString string, config *Config) (*User, error) {
+// AuthenticateToken will take a jwt token and first confirm it is valid (e.g. not expired)
+// once confirmed valid, it will find the user object used to authenticate and return.
+func (c *Config) AuthenticateToken(tokenString string) (*User, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -100,11 +50,12 @@ func (c *Config) AuthenticateToken(tokenString string, config *Config) (*User, e
 		}
 
 		return c.FindUserByUsername(claims["username"].(string))
-	} else {
-		return nil, err
 	}
+
+	return nil, fmt.Errorf("Error getting token claims")
 }
 
+// GetFilteredAppsList returns a copy of the Config.Apps field with only the apps user is allowed to see.
 func (c *Config) GetFilteredAppsList(user *User) map[string]App {
 	filteredList := make(map[string]App)
 
@@ -117,6 +68,7 @@ func (c *Config) GetFilteredAppsList(user *User) map[string]App {
 	return filteredList
 }
 
+// GetPublicAppsList returns a copy of the Config.Apps field with only publically viewable apps.
 func (c *Config) GetPublicAppsList() map[string]App {
 	filteredList := make(map[string]App)
 
@@ -129,6 +81,7 @@ func (c *Config) GetPublicAppsList() map[string]App {
 	return filteredList
 }
 
+// FindUserByUsername returns the full user object of a given username.
 func (c *Config) FindUserByUsername(username string) (*User, error) {
 	for _, user := range c.Users {
 		if user.Username == username {
@@ -137,25 +90,4 @@ func (c *Config) FindUserByUsername(username string) (*User, error) {
 	}
 
 	return nil, fmt.Errorf("No user with username %s found", username)
-}
-
-type Dashboard struct {
-	Background      string `toml:"background"`
-	BackgroundImage string `toml:"background_image"`
-}
-
-func readConfig(filename string) (*Config, error) {
-	tomlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("Failed reading config file: %w", err)
-	}
-
-	var config Config
-
-	config.LoginTimeout = 60
-
-	toml.Unmarshal(tomlFile, &config)
-	fmt.Println(config)
-
-	return &config, nil
 }

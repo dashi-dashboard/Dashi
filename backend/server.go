@@ -8,11 +8,13 @@ import (
 	"net/http"
 	"strings"
 
+	"server/lib/config"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
 
-var config *Config
+var serverConfig *config.Config
 
 type contextKey int
 
@@ -23,15 +25,14 @@ func getFullConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	user := r.Context().Value(authenticatedUserKey).(*User)
+	filteredConfig := serverConfig
 
-	filteredConfig := config
+	filteredConfig.Apps = serverConfig.GetPublicAppsList()
 
-	filteredConfig.Apps = config.GetPublicAppsList()
-
-	if !r.Context().Value(authenticatedRequestKey).(bool) {
-		filteredConfig.Apps = config.GetFilteredAppsList(user)
-		return
+	if r.Context().Value(authenticatedRequestKey).(bool) {
+		user := r.Context().Value(authenticatedUserKey).(*config.User)
+		log.Printf("Getting filtered apps list for user %s", user.Username)
+		filteredConfig.Apps = serverConfig.GetFilteredAppsList(user)
 	}
 
 	json.NewEncoder(w).Encode(filteredConfig)
@@ -42,19 +43,19 @@ func getApps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if !r.Context().Value(authenticatedRequestKey).(bool) {
-		json.NewEncoder(w).Encode(config.GetPublicAppsList())
+		json.NewEncoder(w).Encode(serverConfig.GetPublicAppsList())
 		return
 	}
 
-	user := r.Context().Value(authenticatedUserKey).(*User)
+	user := r.Context().Value(authenticatedUserKey).(*config.User)
 
-	json.NewEncoder(w).Encode(config.GetFilteredAppsList(user))
+	json.NewEncoder(w).Encode(serverConfig.GetFilteredAppsList(user))
 }
 
 func getDashboardConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	json.NewEncoder(w).Encode(config.Dashboard)
+	json.NewEncoder(w).Encode(serverConfig.Dashboard)
 }
 
 func authorizeMiddleware(next http.Handler) http.Handler {
@@ -73,7 +74,7 @@ func authorizeMiddleware(next http.Handler) http.Handler {
 		splitToken := strings.Split(reqToken, "Bearer ")
 		reqToken = splitToken[1]
 
-		user, err := config.AuthenticateToken(reqToken, config)
+		user, err := serverConfig.AuthenticateToken(reqToken)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error authenticating token: %s", err), http.StatusUnauthorized)
 			return
@@ -88,7 +89,7 @@ func authorizeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-type AuthenticateResponse struct {
+type authenticateResponse struct {
 	Success bool
 	Message string
 	Token   string
@@ -97,13 +98,13 @@ type AuthenticateResponse struct {
 func authenticate(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
-	var response AuthenticateResponse
+	var response authenticateResponse
 	response.Success = true
 
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 
-	token, err := config.AuthenticateUser(username, password)
+	token, err := serverConfig.AuthenticateUser(username, password)
 	if err != nil {
 		response.Success = false
 		response.Message = err.Error()
@@ -120,7 +121,7 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 func main() {
 	var err error
 
-	config, err = readConfig("../config.toml")
+	serverConfig, err = config.FromFile("../config.toml")
 	if err != nil {
 		log.Printf("Error reading config file: %s", err)
 	}
