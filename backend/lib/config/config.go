@@ -15,6 +15,7 @@ type Config struct {
 	PasswordHashCost int            `toml:"password_hash_cost"`
 	LoginTimeout     int            `toml:"login_timeout"  json:"-"`
 	Dashboard        Dashboard      `toml:"Dashboard"`
+	DebugEnabled     bool           `toml:"enable_debug" json:"-"`
 }
 
 // AuthenticateUser will find and a user authenticte using provided username/password.
