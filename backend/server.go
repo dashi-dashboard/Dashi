@@ -4,14 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
 	"server/lib/config"
 
+	"github.com/google/uuid"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,6 +23,7 @@ type contextKey int
 
 const authenticatedRequestKey contextKey = 0
 const authenticatedUserKey contextKey = 1
+const loggerKey contextKey = 2
 
 func getApps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -44,9 +47,11 @@ func getDashboardConfig(w http.ResponseWriter, r *http.Request) {
 
 func authorizeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger := getLogger(r.Context())
+
 		reqToken := r.Header.Get("Authorization")
 		if reqToken == "" {
-			log.Println("No authorization header supplied")
+			logger.Trace("No authorization header supplied")
 
 			ctx := context.WithValue(r.Context(), authenticatedRequestKey, false)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -54,20 +59,30 @@ func authorizeMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Println("Authorization header supplied")
+		logger.Tracef("Authorization header: %s", reqToken)
 		splitToken := strings.Split(reqToken, "Bearer ")
 		reqToken = splitToken[1]
 
+		logger.Tracef("JWT Token: %s", reqToken)
+
 		user, err := serverConfig.AuthenticateToken(reqToken)
 		if err != nil {
+			logger.Warnf("Error authenticating token: %s", err)
 			http.Error(w, fmt.Sprintf("Error authenticating token: %s", err), http.StatusUnauthorized)
 			return
 		}
 
+		logger = logger.WithFields(log.Fields{
+			"authenticatedRequest": true,
+			"username":             user.Username,
+			"role":                 user.Role,
+		})
+
+		logger.Info("Token successfully authenticated")
 		ctx := context.WithValue(r.Context(), authenticatedRequestKey, true)
 		ctx = context.WithValue(ctx, authenticatedUserKey, user)
-
-		log.Println(r.Context())
+		ctx = context.WithValue(ctx, loggerKey, logger)
+		logger = getLogger(ctx)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
@@ -80,6 +95,8 @@ type authenticateResponse struct {
 }
 
 func authenticate(w http.ResponseWriter, r *http.Request) {
+	logger := getLogger(r.Context())
+
 	var response authenticateResponse
 	response.Success = true
 
@@ -87,11 +104,16 @@ func authenticate(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 
+	logger.Tracef("Authenticating user %s", username)
+
 	token, err := serverConfig.AuthenticateUser(username, password)
 	if err != nil {
 		response.Success = false
 		response.Message = err.Error()
+		logger.Warnf("Error authenticating user: %s", err)
 	}
+
+	logger.Infof("Successfully authenticated user: %s", username)
 
 	response.Token = token
 
@@ -128,6 +150,53 @@ func generatePassword(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+type Middleware func(http.Handler) http.Handler
+
+func getLogger(ctx context.Context) *log.Entry {
+
+	reqID := ctx.Value(loggerKey)
+
+	if ret, ok := reqID.(*log.Entry); ok {
+		ret.Trace("Got logger")
+		return ret
+	}
+
+	log.Trace("No logger found")
+	return nil
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqID := uuid.New()
+
+		requestLogger := log.WithFields(log.Fields{
+			"requestID": reqID,
+		})
+
+		requestLogger.Trace("Initialized Request Logging")
+		requestLogger.Infof("%s %s %s", r.RemoteAddr, r.Method, r.URL.Path)
+
+		ctx := context.WithValue(r.Context(), loggerKey, requestLogger)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func multipleMiddleware(h http.Handler, m ...Middleware) http.Handler {
+	if len(m) < 1 {
+		return h
+	}
+
+	wrapped := h
+
+	// loop in reverse to preserve middleware order
+	for i := len(m) - 1; i >= 0; i-- {
+		wrapped = m[i](wrapped)
+	}
+
+	return wrapped
+}
+
 func main() {
 	var err error
 
@@ -143,12 +212,28 @@ func main() {
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 	})
 
-	router := mux.NewRouter()
-	router.Handle("/api/apps", authorizeMiddleware(http.HandlerFunc(getApps))).Methods("GET")
-	router.Handle("/api/dashboard", authorizeMiddleware(http.HandlerFunc(getDashboardConfig))).Methods("GET")
+	if serverConfig.DebugEnabled {
+		log.Info("Debug logging enabled")
+		log.SetLevel(log.TraceLevel)
+	}
 
-	router.HandleFunc("/api/authenticate", authenticate).Methods("POST")
-	router.HandleFunc("/api/generate-password", generatePassword).Methods("POST")
+	commonMiddleware := []Middleware{
+		// Gracefully recover from panic returning HTTP 500.
+		handlers.RecoveryHandler(),
+		// Generate a unique ID and initilize structured logging for request.
+		loggingMiddleware,
+	}
+
+	authMiddleware := append(commonMiddleware, []Middleware{
+		authorizeMiddleware,
+	}...)
+
+	router := mux.NewRouter()
+	router.Handle("/api/apps", multipleMiddleware(http.HandlerFunc(getApps), authMiddleware...)).Methods("GET")
+	router.Handle("/api/dashboard", multipleMiddleware(http.HandlerFunc(getDashboardConfig), authMiddleware...)).Methods("GET")
+
+	router.Handle("/api/authenticate", multipleMiddleware(http.HandlerFunc(authenticate), commonMiddleware...)).Methods("POST")
+	router.Handle("/api/generate-password", multipleMiddleware(http.HandlerFunc(generatePassword), commonMiddleware...)).Methods("POST")
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./frontend")))
 
