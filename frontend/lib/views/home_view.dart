@@ -1,16 +1,17 @@
 import 'dart:ui';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dashi/app/theme_data.dart';
 import 'package:dashi/models/dashi_model.dart';
+import 'package:dashi/views/settings_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'home_viewmodel.dart';
-
 class HomeView extends StatefulWidget {
-  const HomeView({Key key}) : super(key: key);
+  final List<Apps> apps;
+  const HomeView({Key key, this.apps}) : super(key: key);
 
   @override
   _HomeViewState createState() => _HomeViewState();
@@ -106,59 +107,36 @@ _appCard(Apps app, double h, double w) {
 class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
-    return ViewModelBuilder<HomeViewModel>.reactive(
-        onModelReady: (model) async {
-          await model.getInfo();
-        },
-        viewModelBuilder: () => HomeViewModel(),
-        builder: (context, model, child) {
-          return Scaffold(
-            body: SafeArea(
-                child: model.ready
-                    ? Container(
-                        decoration: model.background.backgroundImage == ""
-                            ? BoxDecoration(
-                                color: model.background.color != null
-                                    ? model.background.color
-                                    : Colors.transparent,
-                              )
-                            : BoxDecoration(
-                                image: DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image: AssetImage(
-                                        model.background.backgroundImage))),
-                        height: MediaQuery.of(context).size.height,
-                        width: MediaQuery.of(context).size.width,
-                        child: Center(
-                          child: Stack(
-                            children: [
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 40),
-                                child: Center(
-                                    child: GridView.extent(
-                                        maxCrossAxisExtent: 500,
-                                        childAspectRatio: 3 / 1,
-                                        crossAxisSpacing: 5.0,
-                                        shrinkWrap: true,
-                                        children: model.apps.map((i) {
-                                          return Container(
-                                              child: _appCard(
-                                                  i,
-                                                  MediaQuery.of(context)
-                                                      .size
-                                                      .height,
-                                                  MediaQuery.of(context)
-                                                      .size
-                                                      .width));
-                                        }).toList())),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    : Center(child: CircularProgressIndicator())),
-          );
-        });
+    return Stack(
+      children: [
+        Container(
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: Center(
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Center(
+                      child: GridView.extent(
+                          maxCrossAxisExtent: 500,
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          childAspectRatio: 3 / 1,
+                          crossAxisSpacing: 5.0,
+                          shrinkWrap: true,
+                          children: widget.apps.map((i) {
+                            return Container(
+                                child: _appCard(
+                                    i,
+                                    MediaQuery.of(context).size.height,
+                                    MediaQuery.of(context).size.width));
+                          }).toList())),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

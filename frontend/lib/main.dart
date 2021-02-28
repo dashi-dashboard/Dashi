@@ -1,5 +1,7 @@
 import 'package:dashi/app/theme_data.dart';
+import 'package:dashi/views/base_page_view.dart';
 import 'package:dashi/views/home_view.dart';
+import 'package:dashi/views/settings_view.dart';
 import 'package:flutter/material.dart';
 
 Future<void> main() async {
@@ -16,6 +18,6 @@ class MyApp extends StatelessWidget {
         title: 'Dashi',
         debugShowCheckedModeBanner: false,
         theme: theme,
-        home: HomeView());
+        home: BasePageView());
   }
 }
