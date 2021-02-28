@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
 	"server/lib/config"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,6 +22,7 @@ type contextKey int
 
 const authenticatedRequestKey contextKey = 0
 const authenticatedUserKey contextKey = 1
+const loggerKey contextKey = 2
 
 func getApps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -44,9 +46,11 @@ func getDashboardConfig(w http.ResponseWriter, r *http.Request) {
 
 func authorizeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger := getLogger(r.Context())
+
 		reqToken := r.Header.Get("Authorization")
 		if reqToken == "" {
-			log.Println("No authorization header supplied")
+			logger.Info("No authorization header supplied")
 
 			ctx := context.WithValue(r.Context(), authenticatedRequestKey, false)
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -54,12 +58,13 @@ func authorizeMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		log.Println("Authorization header supplied")
+		logger.Info("Authorization header supplied")
 		splitToken := strings.Split(reqToken, "Bearer ")
 		reqToken = splitToken[1]
 
 		user, err := serverConfig.AuthenticateToken(reqToken)
 		if err != nil {
+			logger.Warn("Error authenticating token: %s", err)
 			http.Error(w, fmt.Sprintf("Error authenticating token: %s", err), http.StatusUnauthorized)
 			return
 		}
@@ -128,6 +133,56 @@ func generatePassword(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+type Middleware func(http.Handler) http.Handler
+
+func getLogger(ctx context.Context) *log.Entry {
+
+	reqID := ctx.Value(loggerKey)
+
+	if ret, ok := reqID.(*log.Entry); ok {
+		ret.Info("Got logger")
+		return ret
+	}
+
+	log.Info("No logger found")
+	return nil
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqID := uuid.New()
+
+		requestLogger := log.WithFields(log.Fields{
+			"requestID": reqID,
+		})
+
+		requestLogger.Warn("Initialized Request Logging")
+
+		ctx := context.WithValue(r.Context(), loggerKey, requestLogger)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func multipleMiddleware(h http.Handler, m ...Middleware) http.Handler {
+	if len(m) < 1 {
+		return h
+	}
+
+	wrapped := h
+
+	// loop in reverse to preserve middleware order
+	for i := len(m) - 1; i >= 0; i-- {
+		wrapped = m[i](wrapped)
+	}
+
+	// for _, middleware := range m {
+	// 	wrapped = middleware(wrapped)
+	// }
+
+	return wrapped
+}
+
 func main() {
 	var err error
 
@@ -141,9 +196,20 @@ func main() {
 		AllowedMethods: []string{"GET", "HEAD", "POST", "DELETE", "PUT", "OPTIONS"},
 	})
 
+	commonMiddleware := []Middleware{
+		// Gracefully recover from panic returning HTTP 500.
+		// handlers.RecoveryHandler(),
+		// Generate a unique ID and initilize structured logging for request.
+		loggingMiddleware,
+	}
+
+	authMiddleware := append(commonMiddleware, []Middleware{
+		authorizeMiddleware,
+	}...)
+
 	router := mux.NewRouter()
-	router.Handle("/api/apps", authorizeMiddleware(http.HandlerFunc(getApps))).Methods("GET")
-	router.Handle("/api/dashboard", authorizeMiddleware(http.HandlerFunc(getDashboardConfig))).Methods("GET")
+	router.Handle("/api/apps", multipleMiddleware(http.HandlerFunc(getApps), authMiddleware...)).Methods("GET")
+	router.Handle("/api/dashboard", multipleMiddleware(http.HandlerFunc(getDashboardConfig), authMiddleware...)).Methods("GET")
 
 	router.HandleFunc("/api/authenticate", authenticate).Methods("POST")
 	router.HandleFunc("/api/generate-password", generatePassword).Methods("POST")
