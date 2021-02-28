@@ -194,6 +194,7 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "HEAD", "POST", "DELETE", "PUT", "OPTIONS"},
+		Debug:          serverConfig.DebugEnabled,
 	})
 
 	commonMiddleware := []Middleware{
