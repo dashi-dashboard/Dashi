@@ -194,10 +194,6 @@ func multipleMiddleware(h http.Handler, m ...Middleware) http.Handler {
 		wrapped = m[i](wrapped)
 	}
 
-	// for _, middleware := range m {
-	// 	wrapped = middleware(wrapped)
-	// }
-
 	return wrapped
 }
 
