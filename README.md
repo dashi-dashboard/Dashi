@@ -86,7 +86,7 @@ name = "mysecondusername"
 role = "differentrole"
 ```
 
-There are also some global configuration options. The most important of which for authentication is `jwt_key` which must be set. `jwt_key` should be set to a random 32 character string. This can be generated on linux with `openssl rand -base64 22`. On windows, or for those not comfortable with the command line, we recommend using [https://www.lastpass.com/password-generator](the Lastpass password generator). Changing this value will log out all currently logged in users.
+There are also some global configuration options. The most important of which for authentication is `jwt_key` which must be set. `jwt_key` should be set to a random 32 character string. This can be generated on linux with `openssl rand -base64 22`. On windows, or for those not comfortable with the command line, we recommend using [the Lastpass password generator](https://www.lastpass.com/password-generator). Changing this value will log out all currently logged in users.
 
 Below is a full example configuration file with any options not previously discussed commented.
 
