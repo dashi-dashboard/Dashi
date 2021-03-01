@@ -33,11 +33,12 @@ _appCard(Apps app, double h, double w) {
     child: Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: app.color != Color(0x000000ff)
-                ? [app.color, app.color.withAlpha(150)]
-                : [Colors.black, Colors.grey.shade700]),
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: app.color != Color(0x000000ff)
+              ? [app.color, app.color.withAlpha(150)]
+              : [Colors.black, Colors.grey.shade700],
+        ),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Material(
@@ -118,19 +119,23 @@ class _HomeViewState extends State<HomeView> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Center(
-                      child: GridView.extent(
-                          maxCrossAxisExtent: 500,
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          childAspectRatio: 3 / 1,
-                          crossAxisSpacing: 5.0,
-                          shrinkWrap: true,
-                          children: widget.apps.map((i) {
-                            return Container(
-                                child: _appCard(
-                                    i,
-                                    MediaQuery.of(context).size.height,
-                                    MediaQuery.of(context).size.width));
-                          }).toList())),
+                    child: GridView.extent(
+                      maxCrossAxisExtent: 500,
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      childAspectRatio: 3 / 1,
+                      crossAxisSpacing: 5.0,
+                      shrinkWrap: true,
+                      children: widget.apps.map(
+                        (i) {
+                          return Container(
+                              child: _appCard(
+                                  i,
+                                  MediaQuery.of(context).size.height,
+                                  MediaQuery.of(context).size.width));
+                        },
+                      ).toList(),
+                    ),
+                  ),
                 ),
               ],
             ),

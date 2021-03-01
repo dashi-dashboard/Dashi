@@ -26,14 +26,19 @@ class FadeAnimation extends StatelessWidget {
     // ]);
 
     return CustomAnimation(
-      delay: Duration(milliseconds: (150 * delay).round()),
+      delay: Duration(
+        milliseconds: (150 * delay).round(),
+      ),
       duration: tween.duration,
       tween: tween,
       child: child,
       builder: (context, child, animation) => Opacity(
         opacity: animation.get(AniProps.opacity),
         child: Transform.translate(
-            offset: Offset(0, animation.get(AniProps.translateY)),
+            offset: Offset(
+              0,
+              animation.get(AniProps.translateY),
+            ),
             child: child),
       ),
     );

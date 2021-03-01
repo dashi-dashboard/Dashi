@@ -45,13 +45,14 @@ funcButton(String text, [Function func]) {
       child: InkWell(
         child: Center(
           child: Padding(
-              padding: EdgeInsets.all(8),
-              child: AutoSizeText(
-                text,
-                maxLines: 1,
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
-              )),
+            padding: EdgeInsets.all(8),
+            child: AutoSizeText(
+              text,
+              maxLines: 1,
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
+            ),
+          ),
         ),
         onTap: func,
       ),
@@ -72,145 +73,157 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<SettingsViewModel>.reactive(
-        onModelReady: (model) async {
-          await model.getInfo();
-        },
-        viewModelBuilder: () => SettingsViewModel(),
-        builder: (context, model, child) {
-          return Stack(
-            children: [
-              Container(
-                child: Padding(
-                  padding:
-                      EdgeInsets.all((MediaQuery.of(context).size.height / 22)),
-                  child: Card(
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [Spacer(), heading("Settings")],
+      onModelReady: (model) async {
+        await model.getInfo();
+      },
+      viewModelBuilder: () => SettingsViewModel(),
+      builder: (context, model, child) {
+        return Stack(
+          children: [
+            Container(
+              child: Padding(
+                padding: EdgeInsets.all(
+                  (MediaQuery.of(context).size.height / 22),
+                ),
+                child: Card(
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Spacer(),
+                          heading("Settings"),
+                        ],
+                      ),
+                      _divider(),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            subHeading("API Url"),
+                            Spacer(),
+                            Container(
+                              child: InkWell(
+                                child: Padding(
+                                  child:
+                                      subHeading(APIService.instance.baseUrl),
+                                  padding: EdgeInsets.all(10),
+                                ),
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return TextEntryPopUp(
+                                        controller: urlCont,
+                                        function: () async {
+                                          if (urlCont.text != "") {
+                                            await model
+                                                .setBaseUrl(urlCont.text);
+                                            Navigator.of(context).pop();
+                                          }
+                                        },
+                                        key: Key("Base URL"),
+                                        title: "Update Base URL",
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            )
+                          ],
                         ),
-                        _divider(),
+                      ),
+                      _divider(),
+                      if (AuthService.instance.currentUser != null)
                         Padding(
                           padding: EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
                             children: [
-                              subHeading("API Url"),
+                              subHeading("Username"),
                               Spacer(),
-                              Container(
-                                child: InkWell(
-                                    child: Padding(
-                                      child: subHeading(
-                                          APIService.instance.baseUrl),
-                                      padding: EdgeInsets.all(10),
-                                    ),
-                                    onTap: () {
-                                      showDialog(
-                                          context: context,
-                                          builder: (context) {
-                                            return TextEntryPopUp(
-                                              controller: urlCont,
-                                              function: () async {
-                                                if (urlCont.text != "") {
-                                                  await model
-                                                      .setBaseUrl(urlCont.text);
-                                                  Navigator.of(context).pop();
-                                                }
-                                              },
-                                              key: Key("Base URL"),
-                                              title: "Update Base URL",
-                                            );
-                                          });
-                                    }),
-                              )
+                              Padding(
+                                child: subHeading(
+                                    AuthService.instance.currentUser.name),
+                                padding: EdgeInsets.all(10),
+                              ),
                             ],
                           ),
                         ),
-                        _divider(),
-                        if (AuthService.instance.currentUser != null)
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              children: [
-                                subHeading("Username"),
-                                Spacer(),
-                                Padding(
-                                  child: subHeading(
-                                      AuthService.instance.currentUser.name),
-                                  padding: EdgeInsets.all(10),
-                                ),
-                              ],
-                            ),
-                          ),
-                        Spacer(),
-                        if (AuthService.instance.currentUser != null)
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Flexible(
-                                    child: FractionallySizedBox(
-                                        widthFactor: 1 / 4,
-                                        child: funcButton(
-                                          "Sign Out",
-                                          () {
-                                            model.signOut();
-                                          },
-                                        ))),
-                              ],
-                            ),
-                          ),
-                        AuthService.instance.currentUser != null
-                            ? Container()
-                            : Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Flexible(
-                                      child: FractionallySizedBox(
-                                        widthFactor: 1 / 1.2,
-                                        child: funcButton(
-                                          "Register",
-                                          () {
-                                            showDialog(
-                                              context: context,
-                                              builder: (context) {
-                                                return RegisterPopup();
-                                              },
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    Flexible(
-                                        child: FractionallySizedBox(
-                                      widthFactor: 1 / 3,
-                                    )),
-                                    Flexible(
-                                        child: FractionallySizedBox(
-                                            widthFactor: 1 / 1.2,
-                                            child: funcButton(
-                                              "Sign In",
-                                              () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder: (context) {
-                                                    return SignInPopup();
-                                                  },
-                                                );
-                                              },
-                                            )))
-                                  ],
+                      Spacer(),
+                      if (AuthService.instance.currentUser != null)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: FractionallySizedBox(
+                                  widthFactor: 1 / 4,
+                                  child: funcButton(
+                                    "Sign Out",
+                                    () {
+                                      model.signOut();
+                                    },
+                                  ),
                                 ),
                               ),
-                      ],
-                    ),
+                            ],
+                          ),
+                        ),
+                      AuthService.instance.currentUser != null
+                          ? Container()
+                          : Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Flexible(
+                                    child: FractionallySizedBox(
+                                      widthFactor: 1 / 1.2,
+                                      child: funcButton(
+                                        "Register",
+                                        () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return RegisterPopup();
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  Flexible(
+                                    child: FractionallySizedBox(
+                                      widthFactor: 1 / 3,
+                                    ),
+                                  ),
+                                  Flexible(
+                                    child: FractionallySizedBox(
+                                      widthFactor: 1 / 1.2,
+                                      child: funcButton(
+                                        "Sign In",
+                                        () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) {
+                                              return SignInPopup();
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          );
-        });
+            ),
+          ],
+        );
+      },
+    );
   }
 }

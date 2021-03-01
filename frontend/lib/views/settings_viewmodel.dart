@@ -25,9 +25,11 @@ class SettingsViewModel extends BaseViewModel {
     getCurrentUser();
     _ready = true;
     notifyListeners();
-    APIService.instance.urlStreamNotifier.listen((value) async {
-      await getCurrentUser();
-    });
+    APIService.instance.urlStreamNotifier.listen(
+      (value) async {
+        await getCurrentUser();
+      },
+    );
   }
 
   getCurrentUser() {

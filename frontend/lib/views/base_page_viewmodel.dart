@@ -32,9 +32,11 @@ class BasePageViewModel extends BaseViewModel {
     await fetchApps();
     _ready = true;
     notifyListeners();
-    AuthService.instance.userStreamNotifier.listen((value) async {
-      await fetchApps();
-    });
+    AuthService.instance.userStreamNotifier.listen(
+      (value) async {
+        await fetchApps();
+      },
+    );
   }
 
   fetchApps() async {

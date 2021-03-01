@@ -21,11 +21,12 @@ class TextEntryPopUp extends StatelessWidget {
       actions: [
         CupertinoButton(child: Text("Submit"), onPressed: function),
         CupertinoButton(
-            child: Text("Cancel"),
-            onPressed: () {
-              print(controller.text);
-              Navigator.of(context).pop();
-            })
+          child: Text("Cancel"),
+          onPressed: () {
+            print(controller.text);
+            Navigator.of(context).pop();
+          },
+        )
       ],
       title: Text(title),
     );

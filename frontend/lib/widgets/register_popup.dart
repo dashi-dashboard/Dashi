@@ -26,18 +26,20 @@ final passCont = TextEditingController();
 funcButton(h, String text, [Function func]) {
   return Container(
     decoration: BoxDecoration(
-        color: theme.colorScheme.primary,
-        borderRadius: BorderRadius.circular(10)),
+      color: theme.colorScheme.primary,
+      borderRadius: BorderRadius.circular(10),
+    ),
     child: Material(
       color: Colors.transparent,
       child: InkWell(
         child: Center(
           child: Padding(
-              padding: EdgeInsets.all(8),
-              child: Text(
-                text,
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              )),
+            padding: EdgeInsets.all(8),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+          ),
         ),
         onTap: func == null
             ? () {
@@ -83,167 +85,175 @@ class RegisterPopup extends StatelessWidget {
   Widget build(BuildContext context) {
     String _passwordHash = "";
     return ViewModelBuilder<RegisterViewModel>.reactive(
-        viewModelBuilder: () => RegisterViewModel(),
-        builder: (context, model, child) {
-          submitFunc() async {
-            _passwordHash = await model.generatePassword(passCont.text);
-            nextPage();
-          }
+      viewModelBuilder: () => RegisterViewModel(),
+      builder: (context, model, child) {
+        submitFunc() async {
+          _passwordHash = await model.generatePassword(passCont.text);
+          nextPage();
+        }
 
-          return Dialog(
-              elevation: 0,
-              backgroundColor: Colors.white,
-              child: Container(
-                  height: MediaQuery.of(context).size.height / 2.4,
-                  width: MediaQuery.of(context).size.width / 3,
-                  child: new PageView(
-                      controller: pageCont,
-                      physics: NeverScrollableScrollPhysics(),
+        return Dialog(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          child: Container(
+            height: MediaQuery.of(context).size.height / 2.4,
+            width: MediaQuery.of(context).size.width / 3,
+            child: new PageView(
+              controller: pageCont,
+              physics: NeverScrollableScrollPhysics(),
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Row(
+                        children: [
+                          heading("Name"),
+                          Spacer(),
+                        ],
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: theme.colorScheme.primary, width: 2),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextFormField(
+                            controller: nameCont,
+                            autofocus: true,
+                            onFieldSubmitted: (value) {
+                              nextPage();
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Center(
+                        child: funcButton(
+                            MediaQuery.of(context).size.height, "Next"),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Row(
+                        children: [
+                          back(),
+                          Spacer(),
+                          heading("Password"),
+                        ],
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              color: theme.colorScheme.primary, width: 2),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: TextFormField(
+                            obscureText: true,
+                            controller: passCont,
+                            onFieldSubmitted: (value) {
+                              submitFunc();
+                            },
+                            autofocus: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Center(
+                        child: funcButton(MediaQuery.of(context).size.height,
+                            "Submit", submitFunc),
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    heading("Generated Config"),
+                    Column(
                       children: [
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Row(
-                                children: [
-                                  heading("Name"),
-                                  Spacer(),
-                                ],
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: theme.colorScheme.primary,
-                                        width: 2)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    controller: nameCont,
-                                    autofocus: true,
-                                    onFieldSubmitted: (value) {
-                                      nextPage();
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Center(
-                                  child: funcButton(
-                                      MediaQuery.of(context).size.height,
-                                      "Next")),
-                            ),
-                          ],
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                              "Send the following config to your server admin:"),
                         ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Row(
-                                children: [
-                                  back(),
-                                  Spacer(),
-                                  heading("Password"),
-                                ],
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: theme.colorScheme.primary,
-                                        width: 2)),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: TextFormField(
-                                    obscureText: true,
-                                    controller: passCont,
-                                    onFieldSubmitted: (value) {
-                                      submitFunc();
-                                    },
-                                    autofocus: true,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Center(
-                                  child: funcButton(
-                                      MediaQuery.of(context).size.height,
-                                      "Submit",
-                                      submitFunc)),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            heading("Generated Config"),
-                            Column(
+                        Container(
+                          color: Colors.grey.shade300,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 10),
+                            child: Stack(
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                      "Send the following config to your server admin:"),
-                                ),
-                                Container(
-                                  color: Colors.grey.shade300,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 10),
-                                    child: Stack(
-                                      children: [
-                                        code(
-                                            "[[Users]] \nname     = \"${nameCont.text}\" \npassword = \"${model.passwordHash}\" \nrole     = \"TBD\""),
-                                        Positioned(
-                                            right: 0,
-                                            child: Container(
-                                              child: Material(
-                                                color: Colors.transparent,
-                                                child: InkWell(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            100),
-                                                    splashColor: Colors.white,
-                                                    onTap: () {
-                                                      Clipboard.setData(
-                                                          new ClipboardData(
-                                                              text:
-                                                                  "[[Users]] \nname     = \"${nameCont.text}\" \npassword = \"${model.passwordHash}\" \nrole     = \"TBD\""));
-                                                    },
-                                                    child: Icon(Icons.copy)),
-                                              ),
-                                            )),
-                                      ],
+                                code(
+                                    "[[Users]] \nname     = \"${nameCont.text}\" \npassword = \"${model.passwordHash}\" \nrole     = \"TBD\""),
+                                Positioned(
+                                  right: 0,
+                                  child: Container(
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                          borderRadius:
+                                              BorderRadius.circular(100),
+                                          splashColor: Colors.white,
+                                          onTap: () {
+                                            Clipboard.setData(
+                                              new ClipboardData(
+                                                  text:
+                                                      "[[Users]] \nname     = \"${nameCont.text}\" \npassword = \"${model.passwordHash}\" \nrole     = \"TBD\""),
+                                            );
+                                          },
+                                          child: Icon(Icons.copy)),
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            FractionallySizedBox(
-                                widthFactor: 1 / 2,
-                                child: Center(
-                                    child: funcButton(
-                                        MediaQuery.of(context).size.height,
-                                        "Done", () {
-                                  nameCont.clear();
-                                  passCont.clear();
+                          ),
+                        ),
+                      ],
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: 1 / 2,
+                      child: Center(
+                        child: funcButton(
+                          MediaQuery.of(context).size.height,
+                          "Done",
+                          () {
+                            nameCont.clear();
+                            passCont.clear();
 
-                                  Navigator.of(context).pop();
-                                }))),
-                          ],
-                        )
-                      ])));
-        });
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

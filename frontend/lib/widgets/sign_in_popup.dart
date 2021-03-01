@@ -34,11 +34,12 @@ funcButton(h, String text, [Function func]) {
       child: InkWell(
         child: Center(
           child: Padding(
-              padding: EdgeInsets.all(8),
-              child: Text(
-                text,
-                style: TextStyle(fontSize: 20, color: Colors.white),
-              )),
+            padding: EdgeInsets.all(8),
+            child: Text(
+              text,
+              style: TextStyle(fontSize: 20, color: Colors.white),
+            ),
+          ),
         ),
         onTap: func,
       ),
@@ -59,79 +60,83 @@ class SignInPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<SignInViewModel>.reactive(
-        viewModelBuilder: () => SignInViewModel(),
-        builder: (context, model, child) {
-          submitFunc() async {
-            AuthenticateResponse auth =
-                await model.signIn(nameCont.text, passCont.text);
-            if (auth.success) {
-              model.setLoginError(false);
-              nameCont.clear();
-              passCont.clear();
+      viewModelBuilder: () => SignInViewModel(),
+      builder: (context, model, child) {
+        submitFunc() async {
+          AuthenticateResponse auth =
+              await model.signIn(nameCont.text, passCont.text);
+          if (auth.success) {
+            model.setLoginError(false);
+            nameCont.clear();
+            passCont.clear();
 
-              Navigator.of(context).pop();
-            } else {
-              model.setLoginError(true);
-            }
+            Navigator.of(context).pop();
+          } else {
+            model.setLoginError(true);
           }
+        }
 
-          return Dialog(
-              elevation: 0,
-              backgroundColor: Colors.white,
-              child: Container(
-                  height: MediaQuery.of(context).size.height / 2,
-                  width: MediaQuery.of(context).size.width / 3,
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        return Dialog(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          child: Container(
+            height: MediaQuery.of(context).size.height / 2,
+            width: MediaQuery.of(context).size.width / 3,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: FractionallySizedBox(
+                    widthFactor: 1 / 2,
+                    child: Row(
                       children: [
-                        Flexible(
-                          child: FractionallySizedBox(
-                            widthFactor: 1 / 2,
-                            child: Row(
-                              children: [
-                                Spacer(),
-                                heading("Log In"),
-                              ],
-                            ),
-                          ),
+                        Spacer(),
+                        heading("Log In"),
+                      ],
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: FractionallySizedBox(
+                    widthFactor: 1 / 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        subHeading("Username"),
+                        TextFormField(
+                          autofocus: true,
+                          controller: nameCont,
                         ),
-                        Flexible(
-                          child: FractionallySizedBox(
-                              widthFactor: 1 / 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  subHeading("Username"),
-                                  TextFormField(
-                                    autofocus: true,
-                                    controller: nameCont,
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  subHeading("Password"),
-                                  TextFormField(
-                                    obscureText: true,
-                                    controller: passCont,
-                                    onFieldSubmitted: (value) {
-                                      submitFunc();
-                                    },
-                                  ),
-                                ],
-                              )),
+                        SizedBox(
+                          height: 10,
                         ),
-                        model.loginError
-                            ? errorText(
-                                "Invlid username or password. Please try again.")
-                            : Container(),
-                        FractionallySizedBox(
-                            widthFactor: 1 / 2,
-                            child: funcButton(
-                                MediaQuery.of(context).size.height,
-                                "Submit",
-                                submitFunc))
-                      ])));
-        });
+                        subHeading("Password"),
+                        TextFormField(
+                          obscureText: true,
+                          controller: passCont,
+                          onFieldSubmitted: (value) {
+                            submitFunc();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                model.loginError
+                    ? errorText(
+                        "Invlid username or password. Please try again.")
+                    : Container(),
+                FractionallySizedBox(
+                  widthFactor: 1 / 2,
+                  child: funcButton(
+                      MediaQuery.of(context).size.height, "Submit", submitFunc),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
