@@ -18,15 +18,23 @@ class SignInViewModel extends BaseViewModel {
   bool _loginError = false;
   bool get loginError => _loginError;
 
-  signIn(String username, String password) async {
+  bool _keepLoggedIn = false;
+  bool get keepLoggedIn => _keepLoggedIn;
+
+  signIn(String username, String password, bool keepLoggedIn) async {
     Users user = Users(name: username, password: password, role: "");
     AuthenticateResponse auth =
-        await AuthService.instance.authenticateUser(user);
+        await AuthService.instance.authenticateUser(user, keepLoggedIn);
     return auth;
   }
 
   setLoginError(value) {
     _loginError = value;
+    notifyListeners();
+  }
+
+  updateKeepLoggedIn(bool value) {
+    _keepLoggedIn = value;
     notifyListeners();
   }
 }

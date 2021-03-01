@@ -19,6 +19,12 @@ class AuthService {
 
   Stream<int> get userStreamNotifier => _userStreamControllerNotifier.stream;
 
+  StreamController<bool> _tokenStreamControllerNotifier =
+      StreamController<bool>.broadcast();
+
+  Stream<bool> get tokenStreamControllerNotifier =>
+      _tokenStreamControllerNotifier.stream;
+
   Users _currentUser;
   Users get currentUser => _currentUser;
 
@@ -34,7 +40,8 @@ class AuthService {
     _userStreamControllerNotifier.sink.add(0);
   }
 
-  Future<AuthenticateResponse> authenticateUser([Users user]) async {
+  Future<AuthenticateResponse> authenticateUser(
+      Users user, bool keepLogedIn) async {
     Uri uri = Uri.http(APIService.instance.baseUrl, '/api/authenticate');
 
     Map<String, String> headers = {
@@ -42,8 +49,8 @@ class AuthService {
       HttpHeaders.acceptHeader: 'application/json',
     };
 
-    String userData = "username=${user.name}&password=${user.password}";
-    print(userData);
+    String userData =
+        "username=${user.name}&password=${user.password}&keep_logged_in=${keepLogedIn}";
     var response = await http.post(uri, headers: headers, body: userData);
     print(response.body);
     if (response.statusCode == 200) {
@@ -53,6 +60,7 @@ class AuthService {
         auth = AuthenticateResponse.fromMap(data);
         if (auth.success) {
           user.token = auth.token;
+          user.password = "";
           setUser(user);
         }
         return auth;
@@ -61,7 +69,17 @@ class AuthService {
       }
     } else {
       print(response.statusCode);
-      print('get apps failed');
+      print('Failed to send auth request');
+    }
+  }
+
+  Stream<int> checkUserStream() async* {
+    while (true) {
+      await Future.delayed(Duration(seconds: 2));
+      if (_currentUser != null) {
+        int respCode = await APIService.instance.testFetch(_currentUser.token);
+        yield respCode;
+      }
     }
   }
 }

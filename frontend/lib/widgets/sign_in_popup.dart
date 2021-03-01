@@ -63,8 +63,8 @@ class SignInPopup extends StatelessWidget {
       viewModelBuilder: () => SignInViewModel(),
       builder: (context, model, child) {
         submitFunc() async {
-          AuthenticateResponse auth =
-              await model.signIn(nameCont.text, passCont.text);
+          AuthenticateResponse auth = await model.signIn(
+              nameCont.text, passCont.text, model.keepLoggedIn);
           if (auth.success) {
             model.setLoginError(false);
             nameCont.clear();
@@ -119,6 +119,21 @@ class SignInPopup extends StatelessWidget {
                             submitFunc();
                           },
                         ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Row(
+                          children: [
+                            subHeading("Keep Me Logged in"),
+                            Spacer(),
+                            Checkbox(
+                              value: model.keepLoggedIn,
+                              onChanged: (value) {
+                                model.updateKeepLoggedIn(value);
+                              },
+                            )
+                          ],
+                        )
                       ],
                     ),
                   ),

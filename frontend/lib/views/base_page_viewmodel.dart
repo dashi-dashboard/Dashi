@@ -24,14 +24,18 @@ class BasePageViewModel extends BaseViewModel {
   double _currentPage = 0;
   double get currentPage => _currentPage;
 
+  bool _validToken = false;
+  bool get validToken => _validToken;
+
   getInfo() async {
     _ready = false;
     await APIService.instance.setBaseUrl("localhost:8443");
-    await authenticateUser();
+    await updateUser();
     await fetchDashboardConfig();
     await fetchApps();
     _ready = true;
     notifyListeners();
+    tokenValidCheck();
     AuthService.instance.userStreamNotifier.listen(
       (value) async {
         await fetchApps();
@@ -48,18 +52,10 @@ class BasePageViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  authenticateUser() async {
-    if (AuthService.instance.currentUser != null) {
-      AuthenticateResponse auth = await AuthService.instance
-          .authenticateUser(AuthService.instance.currentUser);
-      notifyListeners();
-    } else {
-      Users user = await PrefsService.instance.getSavedUser();
-      if (user.name != null) {
-        AuthenticateResponse auth =
-            await AuthService.instance.authenticateUser(user);
-        notifyListeners();
-      }
+  updateUser() async {
+    Users user = await PrefsService.instance.getSavedUser();
+    if (user.name != null) {
+      AuthService.instance.setUser(user);
     }
   }
 
@@ -71,5 +67,23 @@ class BasePageViewModel extends BaseViewModel {
   updateCurrentPage(double pageNum) {
     _currentPage = pageNum;
     notifyListeners();
+  }
+
+  tokenValidCheck() async {
+    AuthService.instance.checkUserStream().listen(
+      (event) async {
+        if (event == 401) {
+          _validToken = false;
+          await PrefsService.instance
+              .removeUser(AuthService.instance.currentUser);
+          await AuthService.instance.clearUser();
+          print("Token Expired. Logging out");
+        } else if (event == 200) {
+          _validToken = true;
+        } else {
+          _validToken = false;
+        }
+      },
+    );
   }
 }
