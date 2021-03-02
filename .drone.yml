@@ -1,0 +1,94 @@
+---
+kind: pipeline
+name: amd86
+
+steps:
+- name: test
+  image: golang
+  commands:
+  - cd backend && go build 
+
+- name: publish
+  image: plugins/docker
+  settings:
+    dockerfile: packaging/Dockerfile
+    repo: declanisbritton/dashi
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
+    username:
+      from_secret: DOCKERHUB_USERNAME
+    password:
+      from_secret: DOCKERHUB_PASSWORD
+      
+---
+kind: pipeline
+name: arm
+
+platform:
+  os: linux
+  arch: arm
+
+steps:
+- name: test
+  image: golang
+  commands:
+  - cd backend && go build
+
+- name: publish
+  image: plugins/docker
+  settings:
+    dockerfile: packaging/Dockerfile
+    repo: declanisbritton/dashi
+    auto_tag: true
+    auto_tag_suffix: linux-arm
+    username:
+      from_secret: DOCKERHUB_USERNAME
+    password:
+      from_secret: DOCKERHUB_PASSWORD
+      
+---
+kind: pipeline
+name: arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+- name: test
+  image: golang
+  commands:
+  - cd backend && go build
+
+- name: publish
+  image: plugins/docker
+  settings:
+    dockerfile: packaging/Dockerfile
+    repo: declanisbritton/dashi
+    auto_tag: true
+    auto_tag_suffix: linux-arm64
+    username:
+      from_secret: DOCKERHUB_USERNAME
+    password:
+      from_secret: DOCKERHUB_PASSWORD
+
+---
+kind: pipeline
+name: docker-manifest
+
+depends_on:
+  - arm64
+  - arm
+  - amd86
+
+steps:
+  - name: manifest
+    image: plugins/manifest
+    settings:
+      auto_tag: true
+      ignore_missing: true
+      spec: packaging/manifest.tmpl
+      password:
+        from_secret: DOCKERHUB_PASSWORD
+      username:
+        from_secret: DOCKERHUB_USERNAME
