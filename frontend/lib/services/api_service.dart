@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 import 'dart:io';
 import 'package:dashi/models/dashi_model.dart';
+import 'package:dashi/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,6 +14,11 @@ class APIService {
 
   String _baseUrl = '';
   String get baseUrl => _baseUrl;
+
+  StreamController<int> _urlStreamControllerNotifier =
+      StreamController<int>.broadcast();
+
+  Stream<int> get urlStreamNotifier => _urlStreamControllerNotifier.stream;
 
   setBaseUrl([url]) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -28,37 +36,70 @@ class APIService {
       _baseUrl = url;
       await prefs.setString('baseUrl', _baseUrl);
     }
+    _urlStreamControllerNotifier.sink.add(0);
     print("Dashi API Base URL being set to: ");
     print(_baseUrl);
   }
 
-  Future<List<Apps>> fetchApps() async {
+  Future<List<Apps>> fetchApps([String authToken]) async {
     Uri uri = Uri.http(_baseUrl, '/api/apps');
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
 
+    if (authToken != null) {
+      headers["Authorization"] = "Bearer ${authToken}";
+    }
     var response = await http.get(uri, headers: headers);
     print(response.body);
     if (response.statusCode == 200) {
       try {
         final data = json.decode(response.body) as Map;
-        print(data);
         List<Apps> apps = [];
         for (final appName in data.keys) {
           var newApp = Apps.fromMap(data[appName]);
           newApp.name = appName;
           apps.add(newApp);
-          print(newApp.icon);
         }
         return apps;
       } catch (e) {
         print(e);
       }
+    } else if (response.statusCode == 401) {
+      headers.remove("Authorization");
+      var response = await http.get(uri, headers: headers);
+      print(response.body);
+      if (response.statusCode == 200) {
+        try {
+          final data = json.decode(response.body) as Map;
+          List<Apps> apps = [];
+          for (final appName in data.keys) {
+            var newApp = Apps.fromMap(data[appName]);
+            newApp.name = appName;
+            apps.add(newApp);
+          }
+          return apps;
+        } catch (e) {
+          print(e);
+        }
+      }
     } else {
       print(response.statusCode);
-      print('get apps failed');
+      print('Failed to retrive apps');
     }
+  }
+
+  Future<int> testFetch(String authToken) async {
+    Uri uri = Uri.http(_baseUrl, '/api/apps');
+    Map<String, String> headers = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+    };
+
+    if (authToken != null) {
+      headers["Authorization"] = "Bearer ${authToken}";
+    }
+    var response = await http.get(uri, headers: headers);
+    return response.statusCode;
   }
 
   Future<Dashboard> fetchDashboardConfig() async {
@@ -80,7 +121,34 @@ class APIService {
       }
     } else {
       print(response.statusCode);
-      print('get apps failed');
+      print('Failed to retrive dashboard config');
+    }
+  }
+
+  Future<GeneratePasswordResponse> genPassword(String password) async {
+    Uri uri = Uri.http(_baseUrl, '/api/generate-password');
+
+    Map<String, String> headers = {
+      HttpHeaders.contentTypeHeader: "application/x-www-form-urlencoded",
+      HttpHeaders.acceptHeader: 'application/json',
+    };
+
+    String userData = "password=${password}";
+    print(userData);
+    var response = await http.post(uri, headers: headers, body: userData);
+    print(response.body);
+    if (response.statusCode == 200) {
+      try {
+        GeneratePasswordResponse hash;
+        final data = json.decode(response.body) as Map;
+        hash = GeneratePasswordResponse.fromMap(data);
+        return hash;
+      } catch (e) {
+        print(e);
+      }
+    } else {
+      print(response.statusCode);
+      print('Failed to generate password');
     }
   }
 }

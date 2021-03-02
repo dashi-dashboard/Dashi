@@ -29,6 +29,7 @@ dependencies:
   responsive_grid: ^1.2.1+1
   shared_preferences: ^0.5.4+8
   shared_preferences_web: ^0.1.0
+  simple_animations: ^2.5.1
   stacked: ^1.9.1+2
   url_launcher: ^5.7.10
 
@@ -60,10 +61,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: RobotoMono
+      fonts:
+        - asset: fonts/RobotoMono-Regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro
