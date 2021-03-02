@@ -1,0 +1,23 @@
+image: declanisbritton/dashi:{{#if build.tag}}{{build.tag}}{{else}}latest{{/if}}
+{{#if build.tags}}
+tags:
+{{#each build.tags}}
+  - {{this}}
+{{/each}}
+{{/if}}
+manifests:
+  -
+    image: declanisbritton/dashi:{{#if build.tag}}{{build.tag}}-{{/if}}linux-amd64
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: declanisbritton/dashi:{{#if build.tag}}{{build.tag}}-{{/if}}linux-arm64
+    platform:
+      architecture: arm64
+      os: linux
+  -
+    image: declanisbritton/dashi:{{#if build.tag}}{{build.tag}}-{{/if}}linux-arm64
+    platform:
+      architecture: arm
+      os: linux
