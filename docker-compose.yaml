@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  dashi:
+    image: dashi:latest
+    volumes:
+      # - ./images/:/app/frontend/assets/images/extras
+      - ./config.toml:/config.toml
+    ports:
+      - 8443:8443
+    restart: always
