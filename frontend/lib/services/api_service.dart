@@ -1,11 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:html';
 import 'dart:io';
 import 'package:dashi/models/dashi_model.dart';
-import 'package:dashi/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class APIService {
@@ -46,15 +43,17 @@ class APIService {
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
-
     if (authToken != null) {
       headers["Authorization"] = "Bearer ${authToken}";
     }
-    var response = await http.get(uri, headers: headers);
-    print(response.body);
+
+    Response response = await Dio().getUri(
+      uri,
+      options: Options(headers: headers),
+    );
     if (response.statusCode == 200) {
       try {
-        final data = json.decode(response.body) as Map;
+        final data = response.data as Map;
         List<Apps> apps = [];
         for (final appName in data.keys) {
           var newApp = Apps.fromMap(data[appName]);
@@ -67,11 +66,13 @@ class APIService {
       }
     } else if (response.statusCode == 401) {
       headers.remove("Authorization");
-      var response = await http.get(uri, headers: headers);
-      print(response.body);
+      Response response = await Dio().getUri(
+        uri,
+        options: Options(headers: headers),
+      );
       if (response.statusCode == 200) {
         try {
-          final data = json.decode(response.body) as Map;
+          final data = response.data as Map;
           List<Apps> apps = [];
           for (final appName in data.keys) {
             var newApp = Apps.fromMap(data[appName]);
@@ -98,7 +99,10 @@ class APIService {
     if (authToken != null) {
       headers["Authorization"] = "Bearer ${authToken}";
     }
-    var response = await http.get(uri, headers: headers);
+    Response response = await Dio().getUri(
+      uri,
+      options: Options(headers: headers),
+    );
     return response.statusCode;
   }
 
@@ -108,12 +112,15 @@ class APIService {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
 
-    var response = await http.get(uri, headers: headers);
-    print(response.body);
+    Response response = await Dio().getUri(
+      uri,
+      options: Options(headers: headers),
+    );
+    print(response.data);
     if (response.statusCode == 200) {
       try {
         Dashboard dash;
-        final data = json.decode(response.body) as Map;
+        final data = response.data as Map;
         dash = Dashboard.fromMap(data);
         return dash;
       } catch (e) {
@@ -134,13 +141,14 @@ class APIService {
     };
 
     String userData = "password=${password}";
-    print(userData);
-    var response = await http.post(uri, headers: headers, body: userData);
-    print(response.body);
+    Response response = await Dio().postUri(uri,
+        options: Options(
+            contentType: Headers.formUrlEncodedContentType, headers: headers),
+        data: userData);
     if (response.statusCode == 200) {
       try {
         GeneratePasswordResponse hash;
-        final data = json.decode(response.body) as Map;
+        final data = response.data as Map;
         hash = GeneratePasswordResponse.fromMap(data);
         return hash;
       } catch (e) {
