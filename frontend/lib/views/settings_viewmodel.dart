@@ -20,14 +20,23 @@ class SettingsViewModel extends BaseViewModel {
   Users _currentUser;
   Users get currentUser => _currentUser;
 
+  String _viewType = "grid";
+  String get viewType => _viewType;
+
   getInfo() async {
     _ready = false;
     getCurrentUser();
+    getViewType();
     _ready = true;
     notifyListeners();
     APIService.instance.urlStreamNotifier.listen(
       (value) async {
         await getCurrentUser();
+      },
+    );
+    PrefsService.instance.viewStreamControllerNotifier.listen(
+      (event) async {
+        await getViewType();
       },
     );
   }
@@ -44,5 +53,17 @@ class SettingsViewModel extends BaseViewModel {
   signOut() async {
     await PrefsService.instance.removeUser(AuthService.instance.currentUser);
     getInfo();
+  }
+
+  setViewType(String type) async {
+    await PrefsService.instance.setView(type);
+  }
+
+  getViewType() async {
+    var newViewType = await PrefsService.instance.getPref("viewType");
+    if (newViewType != null) {
+      _viewType = newViewType;
+      notifyListeners();
+    }
   }
 }

@@ -1,15 +1,17 @@
-import 'dart:convert';
-import 'dart:html';
-import 'dart:io';
+import 'dart:async';
 import 'package:dashi/models/dashi_model.dart';
 import 'package:dashi/services/auth_service.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrefsService {
   PrefsService._instantiate();
   static final PrefsService instance = PrefsService._instantiate();
+
+  StreamController<String> _viewStreamControllerNotifier =
+      StreamController<String>.broadcast();
+
+  Stream<String> get viewStreamControllerNotifier =>
+      _viewStreamControllerNotifier.stream;
 
   setPref(String key, String value) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -63,5 +65,16 @@ class PrefsService {
     await deletePref("token");
     await deletePref("role");
     AuthService.instance.clearUser();
+  }
+
+  setView(String type) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    try {
+      await prefs.setString("viewType", type);
+      _viewStreamControllerNotifier.sink.add(type);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

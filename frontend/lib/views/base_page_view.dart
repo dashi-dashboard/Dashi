@@ -96,7 +96,11 @@ class _BasePageViewState extends State<BasePageView>
                     physics: NeverScrollableScrollPhysics(),
                     controller: pageCont,
                     children: <Widget>[
-                      HomeView(apps: model.apps),
+                      HomeView(
+                        apps: model.apps,
+                        tags: model.tags,
+                        viewType: model.viewType,
+                      ),
                       SettingsView(),
                     ],
                   ),
