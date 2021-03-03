@@ -25,7 +25,7 @@ _launchURL(url) async {
   }
 }
 
-_appCard(Apps app, double h, double w) {
+_appCard(Apps app) {
   return Card(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(10),
@@ -108,40 +108,33 @@ _appCard(Apps app, double h, double w) {
 class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: Center(
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Center(
-                    child: GridView.extent(
-                      maxCrossAxisExtent: 500,
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      childAspectRatio: 3 / 1,
-                      crossAxisSpacing: 5.0,
-                      shrinkWrap: true,
-                      children: widget.apps.map(
-                        (i) {
-                          return Container(
-                              child: _appCard(
-                                  i,
-                                  MediaQuery.of(context).size.height,
-                                  MediaQuery.of(context).size.width));
-                        },
-                      ).toList(),
-                    ),
-                  ),
-                ),
-              ],
+    return Center(
+      child: Stack(
+        children: [
+          Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+              child: Wrap(
+                spacing: 8.0, // gap between adjacent chips
+                runSpacing: 4.0, // gap between lines
+                crossAxisAlignment: WrapCrossAlignment.center,
+                alignment: WrapAlignment.center,
+                children: widget.apps.map(
+                  (i) {
+                    return Container(
+                      width: 450,
+                      child: AspectRatio(
+                        aspectRatio: 3 / 1,
+                        child: _appCard(i),
+                      ),
+                    );
+                  },
+                ).toList(),
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
