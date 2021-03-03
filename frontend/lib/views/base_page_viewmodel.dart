@@ -35,7 +35,7 @@ class BasePageViewModel extends BaseViewModel {
 
   getInfo() async {
     _ready = false;
-    await APIService.instance.setBaseUrl("localhost:8443");
+    await APIService.instance.setBaseUrl();
     await updateUser();
     await fetchDashboardConfig();
     await fetchApps();

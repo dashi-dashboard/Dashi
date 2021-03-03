@@ -26,7 +26,8 @@ class APIService {
     if (url == null) {
       if (savedBaseUrl == null) {
         if (kIsWeb) {
-          const dashiBaseUrl = String.fromEnvironment('DASHI_API_BASE_URL');
+          const dashiBaseUrl =
+              String.fromEnvironment('DASHI_API_BASE_URL', defaultValue: "");
           _baseUrl = dashiBaseUrl;
         }
       } else {
