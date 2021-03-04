@@ -1,12 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:html';
 import 'dart:io';
 import 'package:dashi/models/dashi_model.dart';
 import 'package:dashi/services/prefs_service.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 
 import 'api_service.dart';
 
@@ -51,12 +47,14 @@ class AuthService {
 
     String userData =
         "username=${user.name}&password=${user.password}&keep_logged_in=${keepLogedIn}";
-    var response = await http.post(uri, headers: headers, body: userData);
-    print(response.body);
+    Response response = await Dio().postUri(uri,
+        options: Options(
+            contentType: Headers.formUrlEncodedContentType, headers: headers),
+        data: userData);
     if (response.statusCode == 200) {
       try {
         AuthenticateResponse auth;
-        final data = json.decode(response.body) as Map;
+        final data = response.data as Map;
         auth = AuthenticateResponse.fromMap(data);
         if (auth.success) {
           user.token = auth.token;
