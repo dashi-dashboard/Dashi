@@ -6,7 +6,5 @@ RUN go build -o /go/bin/server
 
 FROM alpine:3.10
 WORKDIR app
-COPY --from=declanisbritton/dashi:frontend /usr/share/nginx/html ./frontend/
 COPY --from=GO_BUILD /go/bin/server ./
-RUN ls
 CMD ./server
