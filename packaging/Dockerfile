@@ -1,6 +1,12 @@
+FROM golang:1.13.1-alpine AS GO_BUILD
+RUN apk add build-base
+COPY backend /backend
+WORKDIR /backend
+RUN go build -o /go/bin/server
+
 FROM alpine:3.10
 WORKDIR app
 COPY --from=declanisbritton/dashi:frontend /usr/share/nginx/html ./frontend/
-COPY --from=declanisbritton/dashi:backend /app/server ./
+COPY --from=GO_BUILD /go/bin/server ./
 RUN ls
 CMD ./server
