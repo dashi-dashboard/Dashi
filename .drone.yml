@@ -20,6 +20,11 @@ kind: pipeline
 name: backend
 
 steps:
+- name: test
+  image: golang
+  commands:
+  - cd backend && go build 
+
 - name: publish
   image: plugins/docker
   settings:
@@ -41,11 +46,6 @@ depends_on:
   - frontend
 
 steps:
-- name: test
-  image: golang
-  commands:
-  - cd backend && go build 
-
 - name: publish
   image: plugins/docker
   settings:
@@ -71,11 +71,6 @@ depends_on:
   - frontend
 
 steps:
-- name: test
-  image: golang
-  commands:
-  - cd backend && go build
-
 - name: publish
   image: plugins/docker
   settings:
@@ -101,11 +96,6 @@ depends_on:
   - frontend
 
 steps:
-- name: test
-  image: golang
-  commands:
-  - cd backend && go build
-
 - name: publish
   image: plugins/docker
   settings:
