@@ -1,6 +1,44 @@
 ---
 kind: pipeline
+name: frontend
+
+steps:
+- name: publish
+  image: plugins/docker
+  settings:
+    dockerfile: packaging/Dockerfile.frontend
+    repo: declanisbritton/dashi
+    tags:
+      - frontend
+    username:
+      from_secret: DOCKERHUB_USERNAME
+    password:
+      from_secret: DOCKERHUB_PASSWORD
+
+---
+kind: pipeline
+name: backend
+
+steps:
+- name: publish
+  image: plugins/docker
+  settings:
+    dockerfile: packaging/Dockerfile.backend
+    repo: declanisbritton/dashi
+    tags:
+      - backend
+    username:
+      from_secret: DOCKERHUB_USERNAME
+    password:
+      from_secret: DOCKERHUB_PASSWORD
+
+---
+kind: pipeline
 name: amd86
+
+depends_on:
+  - backend
+  - frontend
 
 steps:
 - name: test
@@ -13,8 +51,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile
     repo: declanisbritton/dashi
-    auto_tag: true
-    auto_tag_suffix: linux-amd64
+    tags:
+      - latest
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
@@ -28,6 +66,10 @@ platform:
   os: linux
   arch: arm
 
+depends_on:
+  - backend
+  - frontend
+
 steps:
 - name: test
   image: golang
@@ -39,13 +81,13 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile
     repo: declanisbritton/dashi
-    auto_tag: true
-    auto_tag_suffix: linux-arm
+    tags:
+      - linux-arm
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
       from_secret: DOCKERHUB_PASSWORD
-      
+
 ---
 kind: pipeline
 name: arm64
@@ -54,6 +96,10 @@ platform:
   os: linux
   arch: arm64
 
+depends_on:
+  - backend
+  - frontend
+
 steps:
 - name: test
   image: golang
@@ -65,8 +111,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile
     repo: declanisbritton/dashi
-    auto_tag: true
-    auto_tag_suffix: linux-arm64
+    tags:
+      - linux-arm64
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
@@ -80,6 +126,8 @@ depends_on:
   - arm64
   - arm
   - amd86
+  - backend
+  - frontend
 
 steps:
   - name: manifest
