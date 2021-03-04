@@ -4,9 +4,18 @@
     <img src="README/Icon.png?raw=true" alt="Logo" align="center">
   </a>
 </p>
- 
+
+<p align="center">
+  <a href="https://cloud.drone.io/declanthebritton/Dashi">
+    <img src="https://cloud.drone.io/api/badges/declanthebritton/Dashi/status.svg" />
+  </a>
+  <a href="https://hub.docker.com/r/declanisbritton/dashi">
+    <img alt="Docker Image Version (latest by date)" src="https://img.shields.io/docker/v/declanisbritton/dashi?arch=amd64&label=docker&logo=docker">
+  </a>
+</p>
+
 Dashi is a config driven, application dashboard SPA (Single Page Application) built with a Go API backend and a Flutter frontend, bundled up into a docker container for good measure.
- 
+
 ## Prerequisites
  
  
@@ -34,7 +43,7 @@ docker run -d \
   -p 8443:8443 \
   -v "${PWD}/config.toml":/config.toml \
   --name dashi \
-  dashi:latest 
+  declanisbritton/dashi:latest 
 ```
  
 To run Dashi with a config and Icons
@@ -44,9 +53,46 @@ docker run -d \
   -p 8443:8443 \
   -v "${PWD}/images/":/app/frontend/assets/images/ \
   -v "${PWD}/config.toml":/config.toml \
-  dashi:latest
+  --name dashi \
+  declanisbritton/dashi:latest
+```
+
+## Docker Images
+ 
+Dashi is split over three docker images:
+* Frontend
+* Backend
+* Full Stack
+ 
+The frontend and backend images are built for the amd64 architecture and can be pulled with the following:
+###### Frontend:
+```
+docker pull declanisbritton/dashi:frontend
+```
+###### Backend:
+```
+docker pull declanisbritton/dashi:backend
+```
+The full stack container is build for all officially supported docker architectures and can be retrieved with the following command
+###### Full Stack:
+```
+docker pull declanisbritton/dashi:latest
 ```
  
+When pulling you may specify a version down to each [Semantic Version](https://semver.org/). for example:
+###### Major Verison:
+```
+docker pull declanisbritton/dashi:1
+```
+###### Minor Version:
+```
+docker pull declanisbritton/dashi:1.2
+```
+###### Patch Version:
+```
+docker pull declanisbritton/dashi:1.2.4
+```
+
 ## Config
  
 Config for Dashi is driven by [TOML](https://github.com/toml-lang/toml)
