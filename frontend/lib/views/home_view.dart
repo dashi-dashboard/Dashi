@@ -239,7 +239,7 @@ _filteredRows(List<Apps> apps, List tags, String type) {
                 SizedBox(
                   height: 250,
                   child: ListView(
-                    shrinkWrap: true,
+                    padding: EdgeInsets.all(8),
                     scrollDirection: Axis.horizontal,
                     physics: ClampingScrollPhysics(),
                     children: [
