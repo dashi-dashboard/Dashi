@@ -8,8 +8,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile.frontend
     repo: declanisbritton/dashi
-    tags:
-      - frontend
+    auto_tag: true
+    auto_tag_suffix: frontend
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
@@ -30,8 +30,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile.backend
     repo: declanisbritton/dashi
-    tags:
-      - backend
+    auto_tag: true
+    auto_tag_suffix: backend
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
@@ -51,8 +51,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile
     repo: declanisbritton/dashi
-    tags:
-      - latest
+    auto_tag: true
+    auto_tag_suffix: linux-amd64
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
@@ -76,8 +76,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile
     repo: declanisbritton/dashi
-    tags:
-      - linux-arm
+    auto_tag: true
+    auto_tag_suffix: linux-arm
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
@@ -101,8 +101,8 @@ steps:
   settings:
     dockerfile: packaging/Dockerfile
     repo: declanisbritton/dashi
-    tags:
-      - linux-arm64
+    auto_tag: true
+    auto_tag_suffix: linux-arm64
     username:
       from_secret: DOCKERHUB_USERNAME
     password:
