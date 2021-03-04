@@ -27,18 +27,31 @@ class BasePageViewModel extends BaseViewModel {
   bool _validToken = false;
   bool get validToken => _validToken;
 
+  List _tags = [];
+  List get tags => _tags;
+
+  String _viewType = "grid";
+  String get viewType => _viewType;
+
   getInfo() async {
     _ready = false;
-    await APIService.instance.setBaseUrl("localhost:8443");
+    await APIService.instance.setBaseUrl();
     await updateUser();
     await fetchDashboardConfig();
     await fetchApps();
+    getTagList();
+    await getViewType();
     _ready = true;
     notifyListeners();
     tokenValidCheck();
     AuthService.instance.userStreamNotifier.listen(
       (value) async {
         await fetchApps();
+      },
+    );
+    PrefsService.instance.viewStreamControllerNotifier.listen(
+      (event) async {
+        await getViewType();
       },
     );
   }
@@ -85,5 +98,25 @@ class BasePageViewModel extends BaseViewModel {
         }
       },
     );
+  }
+
+  getTagList() {
+    List tags = [];
+    for (var i = 0; i < _apps.length; i++) {
+      String currentAppTag = _apps[i].tag;
+      if (!tags.contains(currentAppTag)) {
+        tags.add(currentAppTag);
+      }
+    }
+    _tags = tags;
+    notifyListeners();
+  }
+
+  getViewType() async {
+    var newViewType = await PrefsService.instance.getPref("viewType");
+    if (newViewType != null) {
+      _viewType = newViewType;
+      notifyListeners();
+    }
   }
 }

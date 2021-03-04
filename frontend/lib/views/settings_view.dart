@@ -78,6 +78,38 @@ class _SettingsViewState extends State<SettingsView> {
       },
       viewModelBuilder: () => SettingsViewModel(),
       builder: (context, model, child) {
+        _viewTypeButton(IconData icon, String type) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              decoration: BoxDecoration(
+                  color: model.viewType == type
+                      ? theme.colorScheme.primary
+                      : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(150)),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  splashColor: theme.colorScheme.primary,
+                  borderRadius: BorderRadius.circular(200),
+                  onTap: () {
+                    model.setViewType(type);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Icon(
+                      icon,
+                      color: model.viewType == type
+                          ? Colors.white
+                          : Colors.grey.shade800,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
         return Stack(
           children: [
             Container(
@@ -129,6 +161,23 @@ class _SettingsViewState extends State<SettingsView> {
                                 },
                               ),
                             )
+                          ],
+                        ),
+                      ),
+                      _divider(),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            subHeading("View Type"),
+                            Spacer(),
+                            Row(
+                              children: [
+                                _viewTypeButton(
+                                    Icons.filter_alt_rounded, "filter"),
+                                _viewTypeButton(Icons.grid_on_rounded, "grid")
+                              ],
+                            ),
                           ],
                         ),
                       ),
