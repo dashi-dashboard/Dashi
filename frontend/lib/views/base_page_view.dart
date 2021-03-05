@@ -190,7 +190,9 @@ class _BasePageViewState extends State<BasePageView>
                               tags: model.tags,
                               viewType: model.viewType,
                             ),
-                      SettingsView(),
+                      SettingsView(
+                        inError: model.inError,
+                      ),
                     ],
                   ),
                 )

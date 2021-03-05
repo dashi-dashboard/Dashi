@@ -63,8 +63,8 @@ funcButton(String text, [Function func]) {
 final urlCont = TextEditingController();
 
 class SettingsView extends StatefulWidget {
-  final Dashboard background;
-  SettingsView({Key key, this.background}) : super(key: key);
+  final bool inError;
+  SettingsView({Key key, this.inError}) : super(key: key);
   @override
   _SettingsViewState createState() => _SettingsViewState();
 }
@@ -225,9 +225,9 @@ class _SettingsViewState extends State<SettingsView> {
                             ],
                           ),
                         ),
-                      AuthService.instance.currentUser != null
-                          ? Container()
-                          : Padding(
+                      AuthService.instance.currentUser == null &&
+                              !widget.inError
+                          ? Padding(
                               padding: const EdgeInsets.all(8),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -271,7 +271,8 @@ class _SettingsViewState extends State<SettingsView> {
                                   )
                                 ],
                               ),
-                            ),
+                            )
+                          : Container(),
                     ],
                   ),
                 ),
