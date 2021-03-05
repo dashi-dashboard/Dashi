@@ -73,7 +73,7 @@ class AuthService {
 
   Stream<int> checkUserStream() async* {
     while (true) {
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(Duration(seconds: 5));
       if (_currentUser != null) {
         int respCode = await APIService.instance.testFetch(_currentUser.token);
         yield respCode;
