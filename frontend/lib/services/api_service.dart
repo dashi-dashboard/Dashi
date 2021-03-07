@@ -92,7 +92,7 @@ class APIService {
   }
 
   Future<int> testFetch(String authToken) async {
-    Uri uri = Uri.http(_baseUrl, '/api/apps');
+    Uri uri = Uri.http(_baseUrl, '/api/dashboard');
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
@@ -117,7 +117,6 @@ class APIService {
       uri,
       options: Options(headers: headers),
     );
-    print(response.data);
     if (response.statusCode == 200) {
       try {
         Dashboard dash;
@@ -131,6 +130,40 @@ class APIService {
       print(response.statusCode);
       print('Failed to retrive dashboard config');
     }
+  }
+
+  Future<bool> preRunCheck() async {
+    bool returnVal = false;
+    Uri uri = Uri.http(_baseUrl, '/api/dashboard');
+
+    Map<String, String> headers = {
+      HttpHeaders.contentTypeHeader: 'application/json',
+    };
+
+    _handleDioResponse(dynamic response) {
+      if (response.statusCode == 200) {
+        if (response.data.toString().contains("<!DOCTYPE html>")) {
+          returnVal = false;
+        } else {
+          returnVal = true;
+        }
+      } else {
+        returnVal = false;
+      }
+    }
+
+    _handleDioError(dynamic error) {
+      returnVal = false;
+    }
+
+    await Dio()
+        .getUri(
+          uri,
+          options: Options(headers: headers),
+        )
+        .then(_handleDioResponse)
+        .catchError(_handleDioError);
+    return returnVal;
   }
 
   Future<GeneratePasswordResponse> genPassword(String password) async {

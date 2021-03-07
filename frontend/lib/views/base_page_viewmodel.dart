@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dashi/app/theme_data.dart';
 import 'package:dashi/models/dashi_model.dart';
 import 'package:dashi/services/api_service.dart';
 import 'package:dashi/services/auth_service.dart';
@@ -33,27 +34,14 @@ class BasePageViewModel extends BaseViewModel {
   String _viewType = "grid";
   String get viewType => _viewType;
 
+  bool _inError = false;
+  bool get inError => _inError;
+
   getInfo() async {
     _ready = false;
     await APIService.instance.setBaseUrl();
-    await updateUser();
-    await fetchDashboardConfig();
-    await fetchApps();
-    getTagList();
-    await getViewType();
-    _ready = true;
-    notifyListeners();
-    tokenValidCheck();
-    AuthService.instance.userStreamNotifier.listen(
-      (value) async {
-        await fetchApps();
-      },
-    );
-    PrefsService.instance.viewStreamControllerNotifier.listen(
-      (event) async {
-        await getViewType();
-      },
-    );
+    await startUpCheck();
+    baseUrlStream();
   }
 
   fetchApps() async {
@@ -116,6 +104,51 @@ class BasePageViewModel extends BaseViewModel {
     var newViewType = await PrefsService.instance.getPref("viewType");
     if (newViewType != null) {
       _viewType = newViewType;
+      notifyListeners();
+    }
+  }
+
+  runningStreams() async {
+    AuthService.instance.userStreamNotifier.listen(
+      (value) async {
+        await fetchApps();
+      },
+    );
+    PrefsService.instance.viewStreamControllerNotifier.listen(
+      (event) async {
+        await getViewType();
+      },
+    );
+    await tokenValidCheck();
+  }
+
+  baseUrlStream() {
+    APIService.instance.urlStreamNotifier.listen(
+      (value) async {
+        await startUpCheck();
+      },
+    );
+  }
+
+  startUpCheck() async {
+    bool passCheck = await APIService.instance.preRunCheck();
+    if (passCheck) {
+      await updateUser();
+      await fetchDashboardConfig();
+      await fetchApps();
+      getTagList();
+      await getViewType();
+      _inError = false;
+      _ready = true;
+      notifyListeners();
+      runningStreams();
+    } else {
+      _background = Dashboard(
+        backgroundImage: "",
+        color: theme.colorScheme.background,
+      );
+      _inError = true;
+      _ready = true;
       notifyListeners();
     }
   }

@@ -63,8 +63,8 @@ funcButton(String text, [Function func]) {
 final urlCont = TextEditingController();
 
 class SettingsView extends StatefulWidget {
-  final Dashboard background;
-  SettingsView({Key key, this.background}) : super(key: key);
+  final bool inError;
+  SettingsView({Key key, this.inError}) : super(key: key);
   @override
   _SettingsViewState createState() => _SettingsViewState();
 }
@@ -133,33 +133,40 @@ class _SettingsViewState extends State<SettingsView> {
                           children: [
                             subHeading("API Url"),
                             Spacer(),
-                            Container(
-                              child: InkWell(
-                                child: Padding(
-                                  child:
-                                      subHeading(APIService.instance.baseUrl),
-                                  padding: EdgeInsets.all(10),
-                                ),
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) {
-                                      return TextEntryPopUp(
-                                        controller: urlCont,
-                                        function: () async {
-                                          if (urlCont.text != "") {
+                            Row(
+                              children: [
+                                InkWell(
+                                  borderRadius: BorderRadius.circular(100),
+                                  child: Padding(
+                                    child: Icon(
+                                      Icons.edit,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                    padding: EdgeInsets.all(10),
+                                  ),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return TextEntryPopUp(
+                                          controller: urlCont,
+                                          function: () async {
                                             await model
                                                 .setBaseUrl(urlCont.text);
                                             Navigator.of(context).pop();
-                                          }
-                                        },
-                                        key: Key("Base URL"),
-                                        title: "Update Base URL",
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
+                                          },
+                                          key: Key("Base URL"),
+                                          title: "Update Base URL",
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                subHeading(APIService.instance.baseUrl),
+                              ],
                             )
                           ],
                         ),
@@ -218,9 +225,9 @@ class _SettingsViewState extends State<SettingsView> {
                             ],
                           ),
                         ),
-                      AuthService.instance.currentUser != null
-                          ? Container()
-                          : Padding(
+                      AuthService.instance.currentUser == null &&
+                              !widget.inError
+                          ? Padding(
                               padding: const EdgeInsets.all(8),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -264,7 +271,8 @@ class _SettingsViewState extends State<SettingsView> {
                                   )
                                 ],
                               ),
-                            ),
+                            )
+                          : Container(),
                     ],
                   ),
                 ),
