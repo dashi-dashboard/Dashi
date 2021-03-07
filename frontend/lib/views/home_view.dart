@@ -33,6 +33,16 @@ _launchURL(url) async {
   }
 }
 
+_getColorBasedOnBackground(Color backgroundColor) {
+  var backGroundBrightness =
+      ThemeData.estimateBrightnessForColor(backgroundColor);
+  if (backGroundBrightness == Brightness.dark) {
+    return Colors.white;
+  } else {
+    return Colors.black;
+  }
+}
+
 _cardBody(String viewType, Apps app) {
   var toReturn;
   switch (viewType) {
@@ -66,7 +76,7 @@ _cardBody(String viewType, Apps app) {
                 textAlign: TextAlign.start,
                 maxLines: 1,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _getColorBasedOnBackground(app.color),
                   fontSize: 20,
                   fontWeight: FontWeight.w500,
                 ),
@@ -81,7 +91,7 @@ _cardBody(String viewType, Apps app) {
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Icon(
                   Icons.open_in_new,
-                  color: Colors.white,
+                  color: _getColorBasedOnBackground(app.color),
                 ),
               ),
             ),
@@ -116,7 +126,7 @@ _cardBody(String viewType, Apps app) {
             textAlign: TextAlign.start,
             maxLines: 1,
             style: TextStyle(
-              color: Colors.white,
+              color: _getColorBasedOnBackground(app.color),
               fontSize: 20,
               fontWeight: FontWeight.w500,
             ),
@@ -147,7 +157,7 @@ _appCard(Apps app, String type) {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-            hoverColor: Colors.grey.shade600,
+            hoverColor: Colors.white.withAlpha(50),
             splashColor: Colors.white,
             onTap: () {
               _launchURL(app.url);
