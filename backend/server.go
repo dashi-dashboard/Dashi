@@ -6,18 +6,25 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"server/lib/config"
+	"server/lib/eventbus"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/howeyc/fsnotify"
 	"github.com/rs/cors"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var serverConfig *config.Config
+var serverConfigLock sync.RWMutex
+
+var events *eventbus.EventBus
 
 type contextKey int
 
@@ -197,13 +204,88 @@ func multipleMiddleware(h http.Handler, m ...Middleware) http.Handler {
 	return wrapped
 }
 
+func watchConfig() {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Process events
+	go func() {
+		for {
+			select {
+			case ev := <-watcher.Event:
+				log.Trace("Config filesystem event:", ev)
+
+				serverConfigLock.Lock()
+				// It seems that without a small wait, about 50% of the time we end up with an empty config file.
+				// I'm not sure if this is a race condition elsewhere in the OS or something, but a small wait here sorts the issue.
+				time.Sleep(50 * time.Millisecond)
+				serverConfig, err = config.FromFile("../config.toml")
+				serverConfigLock.Unlock()
+				if err != nil {
+					log.Errorf("Error reading config file: %s", err)
+					break
+				}
+
+				events.Publish("config_update", serverConfig)
+			case err := <-watcher.Error:
+				log.Error("Error in config update watcher:", err)
+			}
+		}
+	}()
+
+	err = watcher.Watch("../config.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func getAppsPoll(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	configsub := events.Subscribe("config_update")
+	defer events.UnSubscribe("config_update", configsub)
+
+	timeout := make(chan bool)
+
+	go func() {
+		time.Sleep(30e9)
+		timeout <- true
+	}()
+
+	select {
+	case newConfigInterface := <-configsub:
+		newConfig := newConfigInterface.(*config.Config)
+
+		serverConfigLock.RLock()
+		defer serverConfigLock.RUnlock()
+
+		if !r.Context().Value(authenticatedRequestKey).(bool) {
+			json.NewEncoder(w).Encode(newConfig.GetPublicAppsList())
+			return
+		}
+
+		user := r.Context().Value(authenticatedUserKey).(*config.User)
+
+		json.NewEncoder(w).Encode(newConfig.GetFilteredAppsList(user))
+	case _ = <-timeout:
+		return
+	}
+}
+
 func main() {
 	var err error
+
+	events = eventbus.New()
 
 	serverConfig, err = config.FromFile("../config.toml")
 	if err != nil {
 		log.Printf("Error reading config file: %s", err)
 	}
+
+	watchConfig()
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -230,6 +312,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Handle("/api/apps", multipleMiddleware(http.HandlerFunc(getApps), authMiddleware...)).Methods("GET")
+	router.Handle("/api/apps/poll", multipleMiddleware(http.HandlerFunc(getAppsPoll), authMiddleware...)).Methods("GET")
 	router.Handle("/api/dashboard", multipleMiddleware(http.HandlerFunc(getDashboardConfig), authMiddleware...)).Methods("GET")
 
 	router.Handle("/api/authenticate", multipleMiddleware(http.HandlerFunc(authenticate), commonMiddleware...)).Methods("POST")
