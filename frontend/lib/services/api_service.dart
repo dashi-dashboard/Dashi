@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:dashi/models/dashi_model.dart';
+import 'package:dashi/services/auth_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,6 +41,7 @@ class APIService {
   }
 
   Future<List<Apps>> fetchApps([String authToken]) async {
+    List<Apps> apps = [];
     Uri uri = Uri.http(_baseUrl, '/api/apps');
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
@@ -48,46 +50,49 @@ class APIService {
       headers["Authorization"] = "Bearer ${authToken}";
     }
 
-    Response response = await Dio().getUri(
-      uri,
-      options: Options(headers: headers),
-    );
-    if (response.statusCode == 200) {
-      try {
-        final data = response.data as Map;
-        List<Apps> apps = [];
-        for (final appName in data.keys) {
-          var newApp = Apps.fromMap(data[appName]);
-          newApp.name = appName;
-          apps.add(newApp);
-        }
-        return apps;
-      } catch (e) {
-        print(e);
+    _handleDioResponse(dynamic response) {
+      final data = response.data as Map;
+      for (final appName in data.keys) {
+        var newApp = Apps.fromMap(data[appName]);
+        newApp.name = appName;
+        apps.add(newApp);
       }
-    } else if (response.statusCode == 401) {
+    }
+
+    _handleDioError(dynamic error) async {
       headers.remove("Authorization");
-      Response response = await Dio().getUri(
-        uri,
-        options: Options(headers: headers),
+      await Dio()
+          .getUri(
+            uri,
+            options: Options(
+              headers: headers,
+              validateStatus: (status) {
+                return status <= 500;
+              },
+            ),
+          )
+          .then(_handleDioResponse)
+          .catchError((error) => print(error));
+    }
+
+    try {
+      await Dio()
+          .getUri(
+            uri,
+            options: Options(headers: headers),
+          )
+          .then(_handleDioResponse)
+          .catchError(
+        (error) async {
+          await _handleDioError(error);
+        },
       );
-      if (response.statusCode == 200) {
-        try {
-          final data = response.data as Map;
-          List<Apps> apps = [];
-          for (final appName in data.keys) {
-            var newApp = Apps.fromMap(data[appName]);
-            newApp.name = appName;
-            apps.add(newApp);
-          }
-          return apps;
-        } catch (e) {
-          print(e);
-        }
-      }
-    } else {
-      print(response.statusCode);
-      print('Failed to retrive apps');
+    } catch (e) {
+      print(e);
+    }
+
+    if (apps.isNotEmpty) {
+      return apps;
     }
   }
 
@@ -102,7 +107,12 @@ class APIService {
     }
     Response response = await Dio().getUri(
       uri,
-      options: Options(headers: headers),
+      options: Options(
+        headers: headers,
+        validateStatus: (status) {
+          return status <= 500;
+        },
+      ),
     );
     return response.statusCode;
   }
@@ -112,7 +122,6 @@ class APIService {
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
-
     Response response = await Dio().getUri(
       uri,
       options: Options(headers: headers),
@@ -156,13 +165,22 @@ class APIService {
       returnVal = false;
     }
 
-    await Dio()
-        .getUri(
-          uri,
-          options: Options(headers: headers),
-        )
-        .then(_handleDioResponse)
-        .catchError(_handleDioError);
+    try {
+      await Dio()
+          .getUri(
+            uri,
+            options: Options(
+              headers: headers,
+              validateStatus: (status) {
+                return status <= 500;
+              },
+            ),
+          )
+          .then(_handleDioResponse)
+          .catchError(_handleDioError);
+    } catch (e) {
+      print(e);
+    }
     return returnVal;
   }
 
@@ -191,6 +209,41 @@ class APIService {
     } else {
       print(response.statusCode);
       print('Failed to generate password');
+    }
+  }
+
+  Future<bool> appLongPole() async {
+    Uri uri = Uri.http(_baseUrl, '/api/apps/poll');
+    bool reload = false;
+    Map<String, String> headers = {
+      HttpHeaders.acceptHeader: 'application/json',
+    };
+
+    _handleDioResponse(dynamic response) {
+      if (response.data.toString().isNotEmpty) {
+        print("Reloading dashboard");
+        reload = true;
+      }
+    }
+
+    await Dio()
+        .getUri(
+          uri,
+          options: Options(headers: headers, receiveTimeout: 30000),
+        )
+        .then(_handleDioResponse)
+        .catchError((error) => print(error));
+    return reload;
+  }
+
+  Stream checkAppsStream() async* {
+    while (true) {
+      bool reload = await APIService.instance.appLongPole();
+      if (reload) {
+        yield true;
+      } else {
+        yield false;
+      }
     }
   }
 }
