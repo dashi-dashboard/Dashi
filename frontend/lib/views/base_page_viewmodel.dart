@@ -130,6 +130,16 @@ class BasePageViewModel extends BaseViewModel {
     );
   }
 
+  appPole() {
+    APIService.instance.checkAppsStream().listen(
+      (event) async {
+        if (event == true) {
+          await fetchApps();
+        }
+      },
+    );
+  }
+
   startUpCheck() async {
     bool passCheck = await APIService.instance.preRunCheck();
     if (passCheck) {
@@ -142,6 +152,7 @@ class BasePageViewModel extends BaseViewModel {
       _ready = true;
       notifyListeners();
       runningStreams();
+      appPole();
     } else {
       _background = Dashboard(
         backgroundImage: "",
