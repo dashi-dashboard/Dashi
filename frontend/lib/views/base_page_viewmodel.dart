@@ -70,24 +70,6 @@ class BasePageViewModel extends BaseViewModel {
     notifyListeners();
   }
 
-  tokenValidCheck() async {
-    AuthService.instance.checkUserStream().listen(
-      (event) async {
-        if (event == 401) {
-          _validToken = false;
-          await PrefsService.instance
-              .removeUser(AuthService.instance.currentUser);
-          await AuthService.instance.clearUser();
-          print("Token Expired. Logging out");
-        } else if (event == 200) {
-          _validToken = true;
-        } else {
-          _validToken = false;
-        }
-      },
-    );
-  }
-
   getTagList() {
     List tags = [];
     for (var i = 0; i < _apps.length; i++) {
@@ -119,13 +101,23 @@ class BasePageViewModel extends BaseViewModel {
         await getViewType();
       },
     );
-    await tokenValidCheck();
   }
 
   baseUrlStream() {
     APIService.instance.urlStreamNotifier.listen(
       (value) async {
         await startUpCheck();
+      },
+    );
+  }
+
+  appPoll() {
+    APIService.instance.checkAppsStream().listen(
+      (event) async {
+        if (event is List<Apps>) {
+          _apps = event;
+          notifyListeners();
+        }
       },
     );
   }
@@ -142,6 +134,7 @@ class BasePageViewModel extends BaseViewModel {
       _ready = true;
       notifyListeners();
       runningStreams();
+      appPoll();
     } else {
       _background = Dashboard(
         backgroundImage: "",
