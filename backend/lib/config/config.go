@@ -18,6 +18,12 @@ type Config struct {
 	DebugEnabled     bool           `toml:"enable_debug" json:"-"`
 }
 
+// AuthenticationToken represents the information stored in the JWT token used for auth.
+type AuthenticationToken struct {
+	User   *User
+	Expiry time.Time
+}
+
 // AuthenticateUser will find and a user authenticte using provided username/password.
 // Returns a jwt token which can be passed to AuthenticateToken to check validity and find the user.
 func (c *Config) AuthenticateUser(username string, password string) (string, error) {
@@ -31,7 +37,7 @@ func (c *Config) AuthenticateUser(username string, password string) (string, err
 
 // AuthenticateToken will take a jwt token and first confirm it is valid (e.g. not expired)
 // once confirmed valid, it will find the user object used to authenticate and return.
-func (c *Config) AuthenticateToken(tokenString string) (*User, error) {
+func (c *Config) AuthenticateToken(tokenString string) (*AuthenticationToken, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -51,7 +57,15 @@ func (c *Config) AuthenticateToken(tokenString string) (*User, error) {
 			return nil, fmt.Errorf("Token has expired")
 		}
 
-		return c.FindUserByUsername(claims["username"].(string))
+		user, err := c.FindUserByUsername(claims["username"].(string))
+		if err != nil {
+			return nil, err
+		}
+
+		return &AuthenticationToken{
+			User:   user,
+			Expiry: time.Unix(int64(claims["exp"].(float64)), 0),
+		}, nil
 	}
 
 	return nil, fmt.Errorf("Error getting token claims")
