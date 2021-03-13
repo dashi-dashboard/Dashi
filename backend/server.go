@@ -28,9 +28,12 @@ var events *eventbus.EventBus
 
 type contextKey int
 
-const authenticatedRequestKey contextKey = 0
-const authenticatedUserKey contextKey = 1
-const loggerKey contextKey = 2
+const (
+	authenticatedRequestKey contextKey = iota
+	authenticatedUserKey
+	authenticationExpiryKey
+	loggerKey
+)
 
 func getApps(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -72,7 +75,7 @@ func authorizeMiddleware(next http.Handler) http.Handler {
 
 		logger.Tracef("JWT Token: %s", reqToken)
 
-		user, err := serverConfig.AuthenticateToken(reqToken)
+		authToken, err := serverConfig.AuthenticateToken(reqToken)
 		if err != nil {
 			logger.Warnf("Error authenticating token: %s", err)
 			http.Error(w, fmt.Sprintf("Error authenticating token: %s", err), http.StatusUnauthorized)
@@ -81,13 +84,15 @@ func authorizeMiddleware(next http.Handler) http.Handler {
 
 		logger = logger.WithFields(log.Fields{
 			"authenticatedRequest": true,
-			"username":             user.Username,
-			"role":                 user.Role,
+			"username":             authToken.User.Username,
+			"role":                 authToken.User.Role,
 		})
 
 		logger.Info("Token successfully authenticated")
 		ctx := context.WithValue(r.Context(), authenticatedRequestKey, true)
-		ctx = context.WithValue(ctx, authenticatedUserKey, user)
+		ctx = context.WithValue(ctx, authenticatedUserKey, authToken.User)
+		ctx = context.WithValue(ctx, authenticationExpiryKey, authToken.Expiry)
+		logger.Info(authToken.Expiry)
 		ctx = context.WithValue(ctx, loggerKey, logger)
 		logger = getLogger(ctx)
 
@@ -172,6 +177,17 @@ func getLogger(ctx context.Context) *log.Entry {
 	return nil
 }
 
+func getTokenExpiry(ctx context.Context) time.Time {
+	expiry := ctx.Value(authenticationExpiryKey)
+
+	if ret, ok := expiry.(time.Time); ok {
+		return ret
+	}
+
+	log.Trace("No logger found")
+	return time.Time{}
+}
+
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqID := uuid.New()
@@ -249,11 +265,19 @@ func getAppsPoll(w http.ResponseWriter, r *http.Request) {
 	defer events.UnSubscribe("config_update", configsub)
 
 	timeout := make(chan bool)
+	authExpired := make(chan bool)
 
 	go func() {
 		time.Sleep(30e9)
 		timeout <- true
 	}()
+
+	if r.Context().Value(authenticatedRequestKey).(bool) && time.Until(getTokenExpiry(r.Context())) < 30*time.Second {
+		go func() {
+			time.Sleep(time.Until(getTokenExpiry(r.Context())))
+			authExpired <- true
+		}()
+	}
 
 	select {
 	case newConfigInterface := <-configsub:
@@ -271,6 +295,9 @@ func getAppsPoll(w http.ResponseWriter, r *http.Request) {
 
 		json.NewEncoder(w).Encode(newConfig.GetFilteredAppsList(user))
 	case _ = <-timeout:
+		return
+	case _ = <-authExpired:
+		http.Error(w, fmt.Sprintf("Authentication token has expired"), http.StatusUnauthorized)
 		return
 	}
 }
