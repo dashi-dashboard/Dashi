@@ -111,7 +111,7 @@ class BasePageViewModel extends BaseViewModel {
     );
   }
 
-  appPole() {
+  appPoll() {
     APIService.instance.checkAppsStream().listen(
       (event) async {
         if (event is List<Apps>) {
@@ -134,7 +134,7 @@ class BasePageViewModel extends BaseViewModel {
       _ready = true;
       notifyListeners();
       runningStreams();
-      appPole();
+      appPoll();
     } else {
       _background = Dashboard(
         backgroundImage: "",

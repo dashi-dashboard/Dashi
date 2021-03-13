@@ -137,7 +137,7 @@ class APIService {
     }
   }
 
-  Future<List<Apps>> appLongPole([authToken]) async {
+  Future<List<Apps>> appLongPoll([authToken]) async {
     List<Apps> apps = [];
 
     Uri uri = Uri.http(_baseUrl, '/api/apps/poll');
@@ -176,7 +176,7 @@ class APIService {
       if (AuthService.instance.currentUser != null) {
         _authToken = AuthService.instance.currentUser.token;
       }
-      var apps = await APIService.instance.appLongPole(_authToken);
+      var apps = await APIService.instance.appLongPoll(_authToken);
       if (apps is List<Apps>) {
         yield apps;
       } else {
