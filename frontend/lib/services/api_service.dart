@@ -55,7 +55,7 @@ class APIService {
     print("Token seemingly expired. Logging out");
     await PrefsService.instance.removeUser(AuthService.instance.currentUser);
     List<Apps> apps = [];
-    Uri uri = Uri.http(_baseUrl, '/api/apps');
+    String url = "${_baseUrl}/api/apps";
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
@@ -66,8 +66,8 @@ class APIService {
     }
 
     await Dio()
-        .getUri(
-          uri,
+        .get(
+          url,
           options: Options(
             headers: headers,
             validateStatus: (status) {
@@ -101,7 +101,7 @@ class APIService {
 
   Future<List<Apps>> fetchApps([String authToken]) async {
     List<Apps> apps = [];
-    Uri uri = Uri.http(_baseUrl, '/api/apps');
+    String url = "${_baseUrl}/api/apps";
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
@@ -115,8 +115,8 @@ class APIService {
 
     try {
       await Dio()
-          .getUri(
-        uri,
+          .get(
+        url,
         options: Options(headers: headers),
       )
           .then(
@@ -139,9 +139,7 @@ class APIService {
 
   Future<List<Apps>> appLongPoll([authToken]) async {
     List<Apps> apps = [];
-
-    Uri uri = Uri.http(_baseUrl, '/api/apps/poll');
-
+    String url = "${_baseUrl}/api/apps/poll";
     Map<String, String> headers = {
       HttpHeaders.acceptHeader: 'application/json',
     };
@@ -151,8 +149,8 @@ class APIService {
     }
 
     await Dio()
-        .getUri(
-      uri,
+        .get(
+      url,
       options: Options(headers: headers, receiveTimeout: 30000),
     )
         .then(
@@ -186,12 +184,12 @@ class APIService {
   }
 
   Future<Dashboard> fetchDashboardConfig() async {
-    Uri uri = Uri.http(_baseUrl, '/api/dashboard');
+    String url = "${_baseUrl}/api/dashboard";
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
-    Response response = await Dio().getUri(
-      uri,
+    Response response = await Dio().get(
+      url,
       options: Options(headers: headers),
     );
     if (response.statusCode == 200) {
@@ -211,7 +209,7 @@ class APIService {
 
   Future<bool> preRunCheck() async {
     bool returnVal = false;
-    Uri uri = Uri.http(_baseUrl, '/api/dashboard');
+    String url = "${_baseUrl}/api/dashboard";
 
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
@@ -235,8 +233,8 @@ class APIService {
 
     try {
       await Dio()
-          .getUri(
-            uri,
+          .get(
+            url,
             options: Options(
               headers: headers,
               validateStatus: (status) {
@@ -253,7 +251,7 @@ class APIService {
   }
 
   Future<GeneratePasswordResponse> genPassword(String password) async {
-    Uri uri = Uri.http(_baseUrl, '/api/generate-password');
+    String url = "${_baseUrl}/api/generate-password";
 
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: "application/x-www-form-urlencoded",
@@ -261,7 +259,7 @@ class APIService {
     };
 
     String userData = "password=${password}";
-    Response response = await Dio().postUri(uri,
+    Response response = await Dio().post(url,
         options: Options(
             contentType: Headers.formUrlEncodedContentType, headers: headers),
         data: userData);
@@ -278,21 +276,5 @@ class APIService {
       print(response.statusCode);
       print('Failed to generate password');
     }
-  }
-
-  Future<int> testFetch(String authToken) async {
-    Uri uri = Uri.http(_baseUrl, '/api/dashboard');
-    Map<String, String> headers = {
-      HttpHeaders.contentTypeHeader: 'application/json',
-    };
-
-    if (authToken != null) {
-      headers["Authorization"] = "Bearer ${authToken}";
-    }
-    Response response = await Dio().getUri(
-      uri,
-      options: Options(headers: headers),
-    );
-    return response.statusCode;
   }
 }
