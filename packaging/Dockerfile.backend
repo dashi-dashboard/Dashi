@@ -7,4 +7,5 @@ RUN go build -o /go/bin/server
 FROM alpine:3.10
 WORKDIR app
 COPY --from=GO_BUILD /go/bin/server ./
+EXPORT 8443
 CMD ./server
