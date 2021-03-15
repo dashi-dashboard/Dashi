@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:html';
 import 'package:dashi/models/dashi_model.dart';
 import 'package:dashi/services/auth_service.dart';
 import 'package:dashi/services/prefs_service.dart';
@@ -11,7 +12,7 @@ class APIService {
   APIService._instantiate();
   static final APIService instance = APIService._instantiate();
 
-  String _baseUrl = '';
+  String _baseUrl = Uri.base.toString().split("#")[0];
   String get baseUrl => _baseUrl;
 
   StreamController<int> _urlStreamControllerNotifier =
@@ -27,7 +28,11 @@ class APIService {
         if (kIsWeb) {
           const dashiBaseUrl =
               String.fromEnvironment('DASHI_API_BASE_URL', defaultValue: "");
-          _baseUrl = dashiBaseUrl;
+          if (dashiBaseUrl == "") {
+            _baseUrl = Uri.base.toString().split("#")[0];
+          } else {
+            _baseUrl = dashiBaseUrl;
+          }
         }
       } else {
         _baseUrl = savedBaseUrl;
@@ -39,6 +44,20 @@ class APIService {
     _urlStreamControllerNotifier.sink.add(0);
     print("Dashi API Base URL being set to: ");
     print(_baseUrl);
+  }
+
+  genUrl(String path) {
+    String url;
+    if (_baseUrl == '') {
+      url = Uri.base.toString().split("#")[0] + path;
+    } else {
+      if (_baseUrl.endsWith("/")) {
+        url = _baseUrl + path;
+      } else {
+        url = _baseUrl + "/" + path;
+      }
+    }
+    return url;
   }
 
   _populateAppReturn(data) async {
@@ -55,7 +74,7 @@ class APIService {
     print("Token seemingly expired. Logging out");
     await PrefsService.instance.removeUser(AuthService.instance.currentUser);
     List<Apps> apps = [];
-    String url = "${_baseUrl}/api/apps";
+    String url = genUrl("api/apps");
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
@@ -101,7 +120,7 @@ class APIService {
 
   Future<List<Apps>> fetchApps([String authToken]) async {
     List<Apps> apps = [];
-    String url = "${_baseUrl}/api/apps";
+    String url = genUrl("api/apps");
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
@@ -139,7 +158,7 @@ class APIService {
 
   Future<List<Apps>> appLongPoll([authToken]) async {
     List<Apps> apps = [];
-    String url = "${_baseUrl}/api/apps/poll";
+    String url = genUrl("api/apps/poll");
     Map<String, String> headers = {
       HttpHeaders.acceptHeader: 'application/json',
     };
@@ -184,7 +203,7 @@ class APIService {
   }
 
   Future<Dashboard> fetchDashboardConfig() async {
-    String url = "${_baseUrl}/api/dashboard";
+    String url = genUrl("api/dashboard");
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
     };
@@ -209,7 +228,7 @@ class APIService {
 
   Future<bool> preRunCheck() async {
     bool returnVal = false;
-    String url = "${_baseUrl}/api/dashboard";
+    String url = genUrl("api/dashboard");
 
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: 'application/json',
@@ -251,7 +270,7 @@ class APIService {
   }
 
   Future<GeneratePasswordResponse> genPassword(String password) async {
-    String url = "${_baseUrl}/api/generate-password";
+    String url = genUrl("api/generate-password");
 
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: "application/x-www-form-urlencoded",

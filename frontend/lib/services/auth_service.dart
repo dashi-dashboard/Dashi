@@ -38,7 +38,7 @@ class AuthService {
 
   Future<AuthenticateResponse> authenticateUser(
       Users user, bool keepLogedIn) async {
-    String url = "${APIService.instance.baseUrl}/api/authenticate";
+    String url = APIService.instance.genUrl("api/authenticate");
 
     Map<String, String> headers = {
       HttpHeaders.contentTypeHeader: "application/x-www-form-urlencoded",
@@ -49,7 +49,9 @@ class AuthService {
         "username=${user.name}&password=${user.password}&keep_logged_in=${keepLogedIn}";
     Response response = await Dio().post(url,
         options: Options(
-            contentType: Headers.formUrlEncodedContentType, headers: headers),
+            followRedirects: true,
+            contentType: Headers.formUrlEncodedContentType,
+            headers: headers),
         data: userData);
     if (response.statusCode == 200) {
       try {
