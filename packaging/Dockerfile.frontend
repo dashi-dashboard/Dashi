@@ -19,4 +19,5 @@ WORKDIR /app
 RUN flutter build web
 
 FROM nginx:stable-alpine
+EXPOSE 80
 COPY --from=FLUTTER_BUILD /app/build/web /usr/share/nginx/html
