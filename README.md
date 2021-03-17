@@ -6,11 +6,11 @@
 </p>
 
 <p align="center">
-  <a href="https://cloud.drone.io/declanthebritton/Dashi">
-    <img src="https://cloud.drone.io/api/badges/declanthebritton/Dashi/status.svg" />
+  <a href="https://cloud.drone.io/dashi-dashboard/Dashi">
+    <img src="https://cloud.drone.io/api/badges/dashi-dashboard/Dashi/status.svg" />
   </a>
-  <a href="https://hub.docker.com/r/declanisbritton/dashi">
-    <img alt="Docker Image Version (latest by date)" src="https://img.shields.io/docker/v/declanisbritton/dashi?arch=amd64&label=docker&logo=docker">
+  <a href="https://hub.docker.com/r/dashidashboard/dashi">
+    <img alt="Docker Image Version (latest by date)" src="https://img.shields.io/docker/v/dashidashboard/dashi?arch=amd64&label=docker&logo=docker">
   </a>
 </p>
 
@@ -43,7 +43,7 @@ docker run -d \
   -p 8443:8443 \
   -v "${PWD}/config.toml":/config.toml \
   --name dashi \
-  declanisbritton/dashi:latest 
+  dashidashboard/dashi:latest 
 ```
  
 To run Dashi with a config and Icons
@@ -54,7 +54,7 @@ docker run -d \
   -v "${PWD}/images/":/app/frontend/assets/images/ \
   -v "${PWD}/config.toml":/config.toml \
   --name dashi \
-  declanisbritton/dashi:latest
+  dashidashboard/dashi:latest
 ```
 
 ## Docker Images
@@ -67,30 +67,30 @@ Dashi is split over three docker images:
 The frontend and backend images are built for the amd64 architecture and can be pulled with the following:
 ###### Frontend:
 ```
-docker pull declanisbritton/dashi:frontend
+docker pull dashidashboard/dashi:frontend
 ```
 ###### Backend:
 ```
-docker pull declanisbritton/dashi:backend
+docker pull dashidashboard/dashi:backend
 ```
 The full stack container is build for all officially supported docker architectures and can be retrieved with the following command
 ###### Full Stack:
 ```
-docker pull declanisbritton/dashi:latest
+docker pull dashidashboard/dashi:latest
 ```
  
 When pulling you may specify a version down to each [Semantic Version](https://semver.org/). for example:
 ###### Major Verison:
 ```
-docker pull declanisbritton/dashi:1
+docker pull dashidashboard/dashi:1
 ```
 ###### Minor Version:
 ```
-docker pull declanisbritton/dashi:1.2
+docker pull dashidashboard/dashi:1.2
 ```
 ###### Patch Version:
 ```
-docker pull declanisbritton/dashi:1.2.4
+docker pull dashidashboard/dashi:1.2.4
 ```
 
 ## Config

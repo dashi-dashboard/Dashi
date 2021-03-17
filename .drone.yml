@@ -7,7 +7,7 @@ steps:
   image: plugins/docker
   settings:
     dockerfile: packaging/Dockerfile.frontend
-    repo: declanisbritton/dashi
+    repo: dashidashboard/dashi
     auto_tag: true
     auto_tag_suffix: frontend
     username:
@@ -29,7 +29,7 @@ steps:
   image: plugins/docker
   settings:
     dockerfile: packaging/Dockerfile.backend
-    repo: declanisbritton/dashi
+    repo: dashidashboard/dashi
     auto_tag: true
     auto_tag_suffix: backend
     username:
@@ -50,7 +50,7 @@ steps:
   image: plugins/docker
   settings:
     dockerfile: packaging/Dockerfile
-    repo: declanisbritton/dashi
+    repo: dashidashboard/dashi
     auto_tag: true
     auto_tag_suffix: linux-amd64
     username:
@@ -75,7 +75,7 @@ steps:
   image: plugins/docker
   settings:
     dockerfile: packaging/Dockerfile
-    repo: declanisbritton/dashi
+    repo: dashidashboard/dashi
     auto_tag: true
     auto_tag_suffix: linux-arm
     username:
@@ -100,7 +100,7 @@ steps:
   image: plugins/docker
   settings:
     dockerfile: packaging/Dockerfile
-    repo: declanisbritton/dashi
+    repo: dashidashboard/dashi
     auto_tag: true
     auto_tag_suffix: linux-arm64
     username:
