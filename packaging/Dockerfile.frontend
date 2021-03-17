@@ -17,6 +17,8 @@ RUN mkdir /app
 COPY frontend /app
 WORKDIR /app
 RUN flutter build web
+RUN git clone https://github.com/dashi-dashboard/dashi-icons.git
+RUN mv dashi-icons/icons/* /app/frontend/assets/images/
 
 FROM nginx:stable-alpine
 EXPOSE 80
