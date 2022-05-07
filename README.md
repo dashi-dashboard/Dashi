@@ -200,4 +200,4 @@ icon="images/extras/<ICON PATH>.png"
  
 This project uses the following license:
 [MIT](https://choosealicense.com/licenses/mit/)
-See `LICENSE.md` for more information.
+See `LICENSE.md` for more information. 
